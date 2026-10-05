@@ -680,6 +680,8 @@ function viewStudentFreeForm(me){
           <option>Развёрнутый ответ</option>
           <option>Другое</option>
         </select></div>
+        <div class="field"><label class="label">Максимальный балл</label>
+  <input class="input" id="fMax" type="number" min="1" value="6"></div>
 
       <div class="field"><label class="label">Текст работы</label>
         <textarea class="textarea" id="fText" placeholder="Напиши ответ здесь..."></textarea></div>
@@ -805,7 +807,7 @@ function submitFree(){
 
   state.freesubs.push({
     id: uid(), studentId: session.id, topic, type, text, link, images,
-    max: 6, at: new Date().toISOString(), score: null, feedback: ''
+    max: Number($('fMax').value) || 6, at: new Date().toISOString(), score: null, feedback: '', at: new Date().toISOString(), score: null, feedback: ''
   });
   ui.newFree = false; ui.tempPhotos = [];
   save(); toast('Работа отправлена куратору');
