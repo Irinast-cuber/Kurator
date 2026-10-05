@@ -8,6 +8,7 @@
   :root{
     --cream:#F4F0E8; --paper:#fff; --ink:#14110F; --muted:#6B6459; --line:#E2DCD1;
     --accent:#C14E31; --accent-soft:#F7E9E4; --olive:#4A5340; --ok:#3F6B4A; --blue:#3A5A78;
+    --fire:#E67E22;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
@@ -71,6 +72,7 @@
   .badge.neutral{background:#EDE9E1;color:var(--muted)}
   .badge.ok{background:#E3EDE5;color:var(--ok)}
   .badge.blue{background:#E4EBF1;color:var(--blue)}
+  .badge.fire{background:#FCEBD9;color:var(--fire)}
 
   .task{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--paper);
     margin-bottom:12px;transition:.18s;cursor:pointer}
@@ -136,6 +138,19 @@
   .file-btn:hover{border-color:var(--ink);color:var(--ink)}
   .file-btn.loading{opacity:.6;cursor:wait}
 
+  /* ---------- СТРИК (ОГОНЁК) ---------- */
+  .streak-card{
+    background:linear-gradient(135deg, #FFF4E6 0%, #FFE4C7 100%);
+    border:1px solid #F5D0A9; border-radius:14px; padding:22px 24px;
+    display:flex; align-items:center; gap:18px; margin-bottom:22px;
+  }
+  .streak-emoji{font-size:46px; line-height:1; filter:drop-shadow(0 2px 4px rgba(230,126,34,.3))}
+  .streak-num{font-family:Georgia,serif; font-size:34px; line-height:1; color:#8B4513; font-weight:700}
+  .streak-label{font-size:13px; color:#8B4513; opacity:.8; margin-top:2px}
+  .streak-status{margin-left:auto; text-align:right}
+  .streak-status .today{font-size:13px; color:var(--ok); font-weight:600}
+  .streak-status .missed{font-size:13px; color:var(--accent); font-weight:600}
+
   .lightbox{position:fixed;inset:0;background:rgba(20,17,15,.92);z-index:1000;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
   .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
@@ -145,6 +160,18 @@
     pointer-events:none;transition:.3s;z-index:999}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 
+  /* ---------- ЛЕНТА ОТМЕТОК ---------- */
+  .checkin{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--paper);
+    margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+  .checkin-emoji{font-size:22px;line-height:1}
+  .checkin-body{flex:1;min-width:0}
+  .checkin-text{font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+  .checkin-meta{font-size:12px;color:var(--muted);margin-top:4px}
+  .heart{background:none;border:none;font-size:20px;cursor:pointer;padding:4px 8px;
+    border-radius:8px;transition:.18s;line-height:1}
+  .heart:hover{background:var(--accent-soft)}
+  .heart.active{color:#E63946}
+
   @media(max-width:700px){
     .row,.row-3{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr 1fr}
@@ -152,6 +179,8 @@
     .login-card{padding:30px 22px}
     .task-head{flex-direction:column;gap:10px}
     .photos{grid-template-columns:repeat(2,1fr)}
+    .streak-card{flex-direction:column; text-align:center; gap:10px}
+    .streak-status{margin:0; text-align:center}
   }
 </style>
 </head>
@@ -188,12 +217,12 @@ if (firebaseConfig.databaseURL && typeof firebase !== 'undefined') {
    ============================================================ */
 const LS_DATA = 'tezis.data.v1';
 const LS_SES  = 'tezis.session.v1';
-const blank = () => ({ curatorPin:'1234', students:[], tasks:[], subs:[], freesubs:[] });
+const blank = () => ({ curatorPin:'1234', students:[], tasks:[], subs:[], freesubs:[], checkins:[] });
 
 let state = blank();
 let session = null;
 let ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
-           filter:'pending', newFree:false, tempPhotos:[], showProgress:false };
+           filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
 
 /* ============================================================
    3. УТИЛИТЫ
@@ -212,6 +241,7 @@ let toastTimer;
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200); }
 
+/* Сжатие фото в base64 */
 function compressImage(file, maxSide=1000, quality=0.6){
   return new Promise((resolve,reject)=>{
     const reader = new FileReader();
@@ -233,6 +263,45 @@ function compressImage(file, maxSide=1000, quality=0.6){
   });
 }
 
+/* ---------- СТРИК ---------- */
+function dayKey(d){
+  const dt = d ? new Date(d) : new Date();
+  return dt.toISOString().slice(0,10);
+}
+
+function calcStreak(studentId){
+  // Учитываем и сдачи работ (subs+freesubs), и отметки (checkins)
+  const mySubs = state.subs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
+  const myFree = state.freesubs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
+  const myChk  = (state.checkins||[]).filter(c=>c.studentId===studentId).map(c=>dayKey(c.at));
+  const days = new Set([...mySubs, ...myFree, ...myChk]);
+
+  let streak = 0;
+  let d = new Date();
+  // Проверяем сегодня
+  const today = dayKey(d);
+  const yesterday = dayKey(new Date(Date.now() - 24*3600*1000));
+
+  if (!days.has(today) && !days.has(yesterday)) return 0;
+
+  // Считаем
+  for (let i=0; i<365; i++){
+    const k = dayKey(d);
+    if (days.has(k)) streak++;
+    else if (i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function activeToday(studentId){
+  const today = dayKey();
+  const mySubs = state.subs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
+  const myFree = state.freesubs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
+  const myChk  = (state.checkins||[]).filter(c=>c.studentId===studentId).map(c=>dayKey(c.at));
+  return mySubs.includes(today) || myFree.includes(today) || myChk.includes(today);
+}
+
 /* ============================================================
    4. ХРАНЕНИЕ
    ============================================================ */
@@ -248,7 +317,7 @@ function boot(){
     db.ref(ROOT).on('value', snap=>{
       const v = snap.val()||{};
       state = { curatorPin:v.curatorPin||'1234', students:v.students||[], tasks:v.tasks||[],
-                subs:v.subs||[], freesubs:v.freesubs||[] };
+                subs:v.subs||[], freesubs:v.freesubs||[], checkins:v.checkins||[] };
       render();
     }, err => { console.error(err); toast('Нет доступа к базе'); });
   } else {
@@ -308,19 +377,29 @@ function loginStudentHTML(){
 function viewCurator(){
   const pending = state.subs.filter(s=>s.score==null).length
                 + state.freesubs.filter(s=>s.score==null).length;
+  const todayCheckins = (state.checkins||[]).filter(c=>dayKey(c.at)===dayKey()).length;
+
   const tabBtn = (k,l,c) => `<button class="tab ${ui.tab===k?'active':''}" data-act="tab" data-tab="${k}">${l}${c?`<span class="cnt">${c}</span>`:''}</button>`;
   let body = '';
   if (ui.tab==='students') body = tabStudents();
   else if (ui.tab==='tasks') body = tabTasks();
   else if (ui.tab==='check') body = ui.openCheck ? viewCheckDetail() : tabCheck();
+  else if (ui.tab==='activity') body = tabActivity();
   else body = tabSettings();
+
   return `<div class="topbar"><div class="topbar-inner">
     <div class="logo">Т<span>Е</span>ЗИС</div>
     <div class="who"><span>Куратор</span>
     <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button></div>
   </div></div>
   <div class="container">
-    <div class="tabs">${tabBtn('students','Ученики')}${tabBtn('tasks','Задания')}${tabBtn('check','Проверка',pending)}${tabBtn('settings','Настройки')}</div>
+    <div class="tabs">
+      ${tabBtn('students','Ученики')}
+      ${tabBtn('tasks','Задания')}
+      ${tabBtn('check','Проверка',pending)}
+      ${tabBtn('activity','Активность',todayCheckins)}
+      ${tabBtn('settings','Настройки')}
+    </div>
     <div class="page">${body}</div>
   </div>`;
 }
@@ -345,12 +424,23 @@ function studentCard(s){
   const fs   = state.freesubs.filter(x=>x.studentId===s.id);
   const all  = [...subs, ...fs].filter(x=>x.score!=null);
   const avg  = all.length ? (all.reduce((a,b)=>a+Number(b.score),0)/all.length).toFixed(1) : '—';
+  const streak = calcStreak(s.id);
   return `<div class="task" style="cursor:default"><div class="task-head">
     <div><h3 class="h3">${esc(s.name)}</h3>
       <div class="meta">PIN: <b>${esc(s.pin)}</b> · заданий ${tasks.length} ·
-        сдано ${subs.length+fs.length} · проверено ${all.length} · средний ${avg}</div></div>
+        сдано ${subs.length+fs.length} · проверено ${all.length} · средний ${avg}</div>
+      ${streak ? `<div class="meta" style="margin-top:4px">🔥 Серия: <b>${streak}</b> ${pluralDays(streak)}</div>` : ''}
+    </div>
     <button class="btn btn-danger" data-act="del-student" data-id="${s.id}">Удалить</button>
   </div></div>`;
+}
+
+function pluralDays(n){
+  const a = n % 10, b = n % 100;
+  if (b >= 11 && b <= 14) return 'дней';
+  if (a === 1) return 'день';
+  if (a >= 2 && a <= 4) return 'дня';
+  return 'дней';
 }
 
 function tabTasks(){
@@ -497,6 +587,51 @@ function viewCheckDetail(){
   </div>`;
 }
 
+/* ---------- ВКЛАДКА "АКТИВНОСТЬ" У КУРАТОРА ---------- */
+function tabActivity(){
+  const items = (state.checkins||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+
+  const todayItems = items.filter(c=>dayKey(c.at)===dayKey());
+
+  return `
+  <div class="card" style="margin-bottom:18px">
+    <h2 class="h2">🔥 Огоньки учеников</h2>
+    ${state.students.length ? state.students.map(s=>{
+      const streak = calcStreak(s.id);
+      const today = activeToday(s.id);
+      return `<div class="meta" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)">
+        <span><b>${esc(s.name)}</b></span>
+        <span style="display:flex;gap:14px;align-items:center">
+          ${today ? '<span style="color:var(--ok);font-size:12px">✓ сегодня</span>' : '<span style="color:var(--muted);font-size:12px">ещё не занимался</span>'}
+          <span style="font-family:Georgia,serif;font-size:18px">${streak ? '🔥 '+streak : '—'}</span>
+        </span>
+      </div>`;
+    }).join('') : '<div class="meta">Пока нет учеников.</div>'}
+  </div>
+
+  <div class="pills" style="margin-top:6px">
+    <span class="pill active" style="cursor:default">Всего отметок: ${items.length}</span>
+    <span class="pill active" style="cursor:default">Сегодня: ${todayItems.length}</span>
+  </div>
+
+  <h2 class="h2" style="margin-top:20px">Последние отметки</h2>
+  ${items.length ? items.slice(0, 100).map(checkinCardCurator).join('')
+    : `<div class="empty">Пока никто не отмечался. Как только ученики начнут отмечаться — увидишь здесь.</div>`}`;
+}
+
+function checkinCardCurator(c){
+  const st = state.students.find(s=>s.id===c.studentId);
+  const liked = !!c.likedByCurator;
+  return `<div class="checkin">
+    <div class="checkin-emoji">${c.kind==='submission' ? '📝' : '📚'}</div>
+    <div class="checkin-body">
+      <div class="checkin-text">${esc(c.text)||'<span class="muted">— без текста —</span>'}</div>
+      <div class="checkin-meta">${esc(st?st.name:'—')} · ${fmtFull(c.at)}</div>
+    </div>
+    <button class="heart ${liked?'active':''}" data-act="like-checkin" data-id="${c.id}" title="Заметить">${liked?'❤️':'🤍'}</button>
+  </div>`;
+}
+
 function tabSettings(){
   return `<div class="card" style="margin-bottom:18px">
     <h2 class="h2">PIN куратора</h2>
@@ -533,6 +668,7 @@ function studentTopbar(me){
 }
 
 function viewStudent(me){
+  if (ui.newCheckin) return viewCheckinForm(me);
   if (ui.showProgress) return viewStudentProgress(me);
   if (ui.newFree) return viewStudentFreeForm(me);
   if (ui.openTask) return viewStudentTask(me);
@@ -545,7 +681,27 @@ function viewStudent(me){
   const checked = all.filter(s=>s.score!=null);
   const avg = checked.length ? (checked.reduce((a,b)=>a+Number(b.score),0)/checked.length).toFixed(1) : '—';
 
+  const streak = calcStreak(me.id);
+  const today = activeToday(me.id);
+
+  const myCheckins = (state.checkins||[]).filter(c=>c.studentId===me.id)
+    .sort((a,b)=>(b.at||'').localeCompare(a.at||'')).slice(0, 8);
+
   return `${studentTopbar(me)}<div class="container"><div class="page">
+
+    <div class="streak-card">
+      <div class="streak-emoji">🔥</div>
+      <div>
+        <div class="streak-num">${streak}</div>
+        <div class="streak-label">${pluralDays(streak)} подряд</div>
+      </div>
+      <div class="streak-status">
+        ${today
+          ? `<div class="today">✓ Сегодня уже занимался</div>`
+          : `<button class="btn btn-primary btn-sm" data-act="open-checkin">Отметиться сегодня</button>`}
+      </div>
+    </div>
+
     <div class="stats">
       <div class="stat"><div class="n">${tasks.length}</div><div class="l">Заданий</div></div>
       <div class="stat"><div class="n">${all.length}</div><div class="l">Сдано</div></div>
@@ -553,21 +709,36 @@ function viewStudent(me){
       <div class="stat"><div class="n">${avg}</div><div class="l">Средний балл</div></div>
     </div>
 
-    <button class="btn btn-primary" style="width:100%;margin-bottom:12px" data-act="open-free">
-      ✎ Прислать работу куратору
-    </button>
-
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:22px" data-act="open-progress">
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-progress">
       📊 Мой прогресс
     </button>
 
-    <h2 class="h2">Мои задания</h2>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-free">
+      ✎ Прислать работу куратору
+    </button>
+
+    <h2 class="h2" style="margin-top:20px">Мои задания</h2>
     ${tasks.length ? tasks.map(a=>studentTaskCard(a,me)).join('')
       : `<div class="empty">Заданий пока нет.</div>`}
 
     ${myFree.length ? `<h2 class="h2" style="margin-top:26px">Свободные работы</h2>
       ${myFree.map(f=>freeStudentCard(f)).join('')}` : ''}
+
+    ${myCheckins.length ? `
+      <h2 class="h2" style="margin-top:26px">Что я выучил</h2>
+      ${myCheckins.map(c=>checkinCardStudent(c)).join('')}
+    ` : ''}
   </div></div>`;
+}
+
+function checkinCardStudent(c){
+  return `<div class="checkin">
+    <div class="checkin-emoji">${c.kind==='submission' ? '📝' : '📚'}</div>
+    <div class="checkin-body">
+      <div class="checkin-text">${esc(c.text)||'<span class="muted">— без текста —</span>'}</div>
+      <div class="checkin-meta">${fmtFull(c.at)} ${c.likedByCurator ? '· куратор заметил ❤️' : ''}</div>
+    </div>
+  </div>`;
 }
 
 function freeStudentCard(f){
@@ -704,6 +875,22 @@ function viewStudentFreeForm(me){
   </div></div>`;
 }
 
+/* ---------- ФОРМА ОТМЕТКИ "ЧТО ВЫУЧИЛ" ---------- */
+function viewCheckinForm(me){
+  return `${studentTopbar(me)}<div class="container"><div class="page">
+    <button class="btn btn-ghost btn-sm" data-act="close-checkin">← Назад</button>
+    <div class="card" style="margin-top:16px">
+      <h1 class="display h1" style="margin-bottom:6px">🔥 Отметиться</h1>
+      <p class="meta" style="margin-bottom:20px">Расскажи коротко, что выучил или повторил сегодня. Это не сдача работы — просто отметка.</p>
+
+      <div class="field"><label class="label">Что сделал сегодня?</label>
+        <textarea class="textarea" id="chText" placeholder="Например: Повторил тему «Социальная стратификация», прочитал конспект по праву" style="min-height:100px"></textarea></div>
+
+      <button class="btn btn-primary" style="width:100%" data-act="submit-checkin">Отметиться 🔥</button>
+    </div>
+  </div></div>`;
+}
+
 function viewStudentMyFree(me){
   const f = state.freesubs.find(x=>x.id===ui.openTask);
   if (!f){ ui.openTask=null; return viewStudent(me); }
@@ -756,23 +943,16 @@ function viewStudentProgress(me){
   const avgP = prevWeek.length ? prevWeek.reduce((a,b)=>a+Number(b.score),0)/prevWeek.length : 0;
   const diff = avgP ? (avgW - avgP) : 0;
 
-  const days = new Set(all.map(s=>new Date(s.at).toISOString().slice(0,10)));
-  let streak = 0;
-  let d = new Date();
-  for (let i=0; i<365; i++){
-    const k = d.toISOString().slice(0,10);
-    if (days.has(k)) streak++;
-    else if (i>0) break;
-    d.setDate(d.getDate()-1);
-  }
+  const streak = calcStreak(me.id);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const activity = [];
   for (let i=27; i>=0; i--){
     const day = new Date(today); day.setDate(day.getDate()-i);
     const key = day.toISOString().slice(0,10);
-    const cnt = all.filter(s=>new Date(s.at).toISOString().slice(0,10)===key).length;
-    activity.push({ key, cnt, day: day.getDate() });
+    const subsCnt = all.filter(s=>new Date(s.at).toISOString().slice(0,10)===key).length;
+    const chkCnt = (state.checkins||[]).filter(c=>c.studentId===me.id && new Date(c.at).toISOString().slice(0,10)===key).length;
+    activity.push({ key, cnt: subsCnt + chkCnt });
   }
   const maxCnt = Math.max(1, ...activity.map(a=>a.cnt));
   const activityHTML = activity.map(a=>{
@@ -837,8 +1017,8 @@ function viewStudentProgress(me){
         </div>
       </div>
       <div class="stat">
-        <div class="n">${streak}</div>
-        <div class="l">Дней подряд 🔥</div>
+        <div class="n">${streak}🔥</div>
+        <div class="l">${pluralDays(streak)} подряд</div>
       </div>
       <div class="stat">
         <div class="n">${checked.length}/${all.length}</div>
@@ -854,7 +1034,7 @@ function viewStudentProgress(me){
     <div class="card" style="margin-bottom:16px">
       <h2 class="h2">Активность за 28 дней</h2>
       <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px">${activityHTML}</div>
-      <p class="meta" style="margin-top:10px;font-size:12px">Чем темнее квадрат — тем больше сдач в этот день.</p>
+      <p class="meta" style="margin-top:10px;font-size:12px">Чем темнее квадрат — тем больше активности в этот день (сдачи и отметки).</p>
     </div>
 
     ${typeRows ? `<div class="card">
@@ -881,7 +1061,7 @@ function doLoginStudent(){
   if (!st || String(st.pin)!==pin) return toast('Неверный PIN');
   session = { role:'student', id: st.id };
   localStorage.setItem(LS_SES, JSON.stringify(session));
-  ui.openTask = null; ui.newFree = false; ui.tempPhotos = []; ui.showProgress = false;
+  ui.openTask = null; ui.newFree = false; ui.tempPhotos = []; ui.showProgress = false; ui.newCheckin = false;
   render();
 }
 function addStudent(){
@@ -896,6 +1076,7 @@ function delStudent(id){
   state.students = state.students.filter(s=>s.id!==id);
   state.subs = state.subs.filter(s=>s.studentId!==id);
   state.freesubs = state.freesubs.filter(s=>s.studentId!==id);
+  state.checkins = (state.checkins||[]).filter(s=>s.studentId!==id);
   save();
 }
 function addTask(){
@@ -916,6 +1097,22 @@ function delTask(id){
   state.subs = state.subs.filter(s=>s.taskId!==id);
   save();
 }
+
+/* Автоматическая отметка о сдаче работы */
+function addSubmissionCheckin(studentId, topic, kind, taskType){
+  state.checkins = state.checkins || [];
+  const prefix = kind==='free' ? 'Сдал(а) свободную работу' : 'Сдал(а) задание';
+  const text = `${prefix}: ${topic}${taskType ? ' ('+taskType+')' : ''}`;
+  state.checkins.push({
+    id: uid(),
+    studentId,
+    text,
+    kind: 'submission',
+    at: new Date().toISOString(),
+    likedByCurator: false
+  });
+}
+
 function submitWork(taskId){
   const text = $('sText').value.trim();
   const link = $('sLink').value.trim();
@@ -923,12 +1120,17 @@ function submitWork(taskId){
   if (!text && !link && !images.length) return toast('Напиши ответ или прикрепи фото');
 
   const sid = session.id;
+  const a = state.tasks.find(t=>t.id===taskId);
   const obj = { id: taskId+'_'+sid, taskId, studentId:sid, text, link, images,
                 at:new Date().toISOString(), score:null, feedback:'' };
   const ex = state.subs.find(s=>s.id===obj.id);
   if (ex) Object.assign(ex, obj); else state.subs.push(obj);
+
+  // Автоматическая отметка
+  if (!ex && a) addSubmissionCheckin(sid, a.topic||'Задание', 'task', a.type);
+
   ui.openTask = null; ui.tempPhotos = [];
-  save(); toast('Работа отправлена');
+  save(); toast('Работа отправлена 🔥');
 }
 function submitFree(){
   const topic = $('fTopic').value.trim();
@@ -944,9 +1146,36 @@ function submitFree(){
     max: Number($('fMax').value) || 6,
     at: new Date().toISOString(), score: null, feedback: ''
   });
+  addSubmissionCheckin(session.id, topic, 'free', type);
   ui.newFree = false; ui.tempPhotos = [];
-  save(); toast('Работа отправлена куратору');
+  save(); toast('Работа отправлена 🔥');
 }
+
+/* Отметка "что выучил" */
+function submitCheckin(){
+  const text = $('chText').value.trim();
+  if (!text) return toast('Напиши пару слов о том, что выучил');
+  state.checkins = state.checkins || [];
+  state.checkins.push({
+    id: uid(),
+    studentId: session.id,
+    text,
+    kind: 'study',
+    at: new Date().toISOString(),
+    likedByCurator: false
+  });
+  ui.newCheckin = false;
+  save(); toast('Отметился! 🔥');
+}
+
+function likeCheckin(id){
+  const c = (state.checkins||[]).find(x=>x.id===id);
+  if (!c) return;
+  c.likedByCurator = !c.likedByCurator;
+  save();
+  toast(c.likedByCurator ? 'Лайк отправлен ❤️' : 'Лайк убран');
+}
+
 function saveCheck(id, kind){
   let s;
   if (kind==='free') s = state.freesubs.find(x=>x.id===id);
@@ -1019,7 +1248,7 @@ document.addEventListener('click', e => {
     case 'logout':
       session = null; localStorage.removeItem(LS_SES);
       ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
-             filter:'pending', newFree:false, tempPhotos:[], showProgress:false };
+             filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
       render(); break;
     case 'tab': ui.tab = el.dataset.tab; ui.openCheck=null; render(); break;
     case 'set-filter': ui.filter = el.dataset.filter; render(); break;
@@ -1043,6 +1272,12 @@ document.addEventListener('click', e => {
     case 'open-myfree': ui.openTask = id; renderStudentMyFree(); break;
     case 'open-progress': ui.showProgress = true; render(); break;
     case 'close-progress': ui.showProgress = false; render(); break;
+
+    case 'open-checkin': ui.newCheckin = true; render(); break;
+    case 'close-checkin': ui.newCheckin = false; render(); break;
+    case 'submit-checkin': submitCheckin(); break;
+    case 'like-checkin': likeCheckin(id); render(); break;
+
     case 'rm-photo': ui.tempPhotos.splice(+el.dataset.idx,1); renderPhotoPreview(); break;
     case 'zoom': {
       const src = el.dataset.imgSrc || el.getAttribute('src');
@@ -1085,6 +1320,7 @@ $('importFile').addEventListener('change', e => {
       state = Object.assign(blank(), parsed);
       state.students = state.students||[]; state.tasks = state.tasks||[];
       state.subs = state.subs||[]; state.freesubs = state.freesubs||[];
+      state.checkins = state.checkins||[];
       save(); toast('Данные загружены');
     } catch(err){ toast('Не получилось прочитать файл'); }
   };
