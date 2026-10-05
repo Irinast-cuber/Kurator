@@ -538,6 +538,7 @@ function studentTopbar(me){
 function viewStudent(me){
   if (ui.newFree) return viewStudentFreeForm(me);
   if (ui.openTask) return viewStudentTask(me);
+  if (ui.showProgress) return viewStudentProgress(me);
 
   const tasks = state.tasks.filter(t=>t.studentId==='all'||t.studentId===me.id)
     .sort((a,b)=>(a.due||'z').localeCompare(b.due||'z'));
@@ -559,7 +560,9 @@ function viewStudent(me){
       ✎ Прислать работу куратору
     </button>
 
-    <h2 class="h2">Мои задания</h2>
+    <h2 class="h2">Мои задания</h2><button class="btn btn-ghost" style="width:100%;margin-bottom:18px" data-act="open-progress">
+  📊 Мой прогресс
+</button>
     ${tasks.length ? tasks.map(a=>studentTaskCard(a,me)).join('')
       : `<div class="empty">Заданий пока нет.</div>`}
 
@@ -728,6 +731,142 @@ function viewStudentMyFree(me){
           <div class="answer">${esc(f.feedback)}</div>`:''}`:''}
     </div>
   </div></div>`;
+  /* ---------- ЭКРАН ПРОГРЕССА ---------- */
+function viewStudentProgress(me){
+  const mySubs = state.subs.filter(s=>s.studentId===me.id).map(s=>{
+    const a = state.tasks.find(t=>t.id===s.taskId);
+    return { ...s, max: a?.max||3, type: a?.type||'', topic: a?.topic||'' };
+  });
+  const myFree = state.freesubs.filter(s=>s.studentId===me.id).map(s=>({
+    ...s, max: s.max||6, type: s.type||'Свободная', topic: s.topic||''
+  }));
+  const all = [...mySubs, ...myFree].sort((a,b)=>(a.checkedAt||a.at||'').localeCompare(b.checkedAt||b.at||''));
+  const checked = all.filter(s=>s.score!=null);
+
+  const avg = checked.length ? checked.reduce((a,b)=>a+Number(b.score),0)/checked.length : 0;
+
+  // Сравнение с прошлой неделей
+  const weekAgo = Date.now() - 7*24*3600*1000;
+  const thisWeek = checked.filter(s=>new Date(s.checkedAt||s.at).getTime() >= weekAgo);
+  const prevWeek = checked.filter(s=>{
+    const t = new Date(s.checkedAt||s.at).getTime();
+    return t >= weekAgo-7*24*3600*1000 && t < weekAgo;
+  });
+  const avgW = thisWeek.length ? thisWeek.reduce((a,b)=>a+Number(b.score),0)/thisWeek.length : 0;
+  const avgP = prevWeek.length ? prevWeek.reduce((a,b)=>a+Number(b.score),0)/prevWeek.length : 0;
+  const diff = avgP ? (avgW - avgP) : 0;
+
+  // Streak — сколько дней подряд сдавал
+  const days = new Set(all.map(s=>new Date(s.at).toISOString().slice(0,10)));
+  let streak = 0;
+  let d = new Date();
+  for (let i=0; i<365; i++){
+    const k = d.toISOString().slice(0,10);
+    if (days.has(k)) streak++;
+    else if (i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+
+  // Активность за 28 дней
+  const today = new Date(); today.setHours(0,0,0,0);
+  const activity = [];
+  for (let i=27; i>=0; i--){
+    const day = new Date(today); day.setDate(day.getDate()-i);
+    const key = day.toISOString().slice(0,10);
+    const cnt = all.filter(s=>new Date(s.at).toISOString().slice(0,10)===key).length;
+    activity.push({ key, cnt, day: day.getDate() });
+  }
+  const maxCnt = Math.max(1, ...activity.map(a=>a.cnt));
+  const activityHTML = activity.map(a=>{
+    const op = a.cnt===0 ? 0.08 : 0.2 + 0.8*(a.cnt/maxCnt);
+    return `<div style="width:100%;aspect-ratio:1;background:rgba(193,78,49,${op});border-radius:3px"
+      title="${a.key}: ${a.cnt}"></div>`;
+  }).join('');
+
+  // График баллов
+  const W = 320, H = 160, P = 28;
+  let chart = `<div class="empty">Пока нет проверенных работ — график появится, когда куратор поставит первую оценку.</div>`;
+  if (checked.length >= 2){
+    const maxScore = Math.max(...checked.map(s=>Number(s.score)), 1);
+    const pts = checked.map((s,i)=>{
+      const x = P + (W-2*P) * (i/(checked.length-1));
+      const y = H-P - (H-2*P) * (Number(s.score)/maxScore);
+      return { x, y, s };
+    });
+    const line = pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+    const dots = pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4"
+      fill="#C14E31" stroke="#fff" stroke-width="2"><title>${esc(p.s.topic||'')}: ${p.s.score}/${p.s.max}</title></circle>`).join('');
+    const yTicks = [0, Math.round(maxScore/2), maxScore].map(v=>{
+      const y = H-P - (H-2*P) * (v/maxScore);
+      return `<text x="4" y="${y+4}" font-size="10" fill="#6B6459">${v}</text>
+        <line x1="${P}" y1="${y}" x2="${W-P}" y2="${y}" stroke="#E2DCD1" stroke-width="1"/>`;
+    }).join('');
+    chart = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+      ${yTicks}
+      <path d="${line}" fill="none" stroke="#14110F" stroke-width="2" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+  } else if (checked.length === 1){
+    chart = `<div class="answer" style="text-align:center">
+      Первая оценка: <b>${checked[0].score}/${checked[0].max}</b><br>
+      <span class="muted" style="font-size:13px">Сдай ещё работу — появится график 📈</span>
+    </div>`;
+  }
+
+  // Разбивка по типам
+  const byType = {};
+  checked.forEach(s=>{
+    const t = s.type || 'Другое';
+    if (!byType[t]) byType[t] = { sum:0, n:0 };
+    byType[t].sum += Number(s.score);
+    byType[t].n++;
+  });
+  const typeRows = Object.entries(byType).map(([t,v])=>
+    `<div class="meta" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <span>${esc(t)}</span><span><b>${(v.sum/v.n).toFixed(1)}</b> средний · ${v.n} шт</span>
+    </div>`).join('');
+
+  return `${studentTopbar(me)}<div class="container"><div class="page">
+    <button class="btn btn-ghost btn-sm" data-act="close-progress">← Назад</button>
+
+    <h1 class="display h1" style="margin:16px 0 6px">Прогресс</h1>
+    <p class="meta" style="margin-bottom:20px">${esc(me.name)} · всего сдано ${all.length} · проверено ${checked.length}</p>
+
+    <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat">
+        <div class="n">${avg.toFixed(1)}</div>
+        <div class="l">Средний балл
+          ${diff!==0 ? `<span style="color:${diff>0?'var(--ok)':'var(--accent)'}">
+            ${diff>0?'↑':'↓'} ${Math.abs(diff).toFixed(1)}</span>` : ''}
+        </div>
+      </div>
+      <div class="stat">
+        <div class="n">${streak}</div>
+        <div class="l">Дней подряд 🔥</div>
+      </div>
+      <div class="stat">
+        <div class="n">${checked.length}/${all.length}</div>
+        <div class="l">Проверено / сдано</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2 class="h2">Динамика баллов</h2>
+      ${chart}
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2 class="h2">Активность за 28 дней</h2>
+      <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px">${activityHTML}</div>
+      <p class="meta" style="margin-top:10px;font-size:12px">Чем темнее квадрат — тем больше сдач в этот день.</p>
+    </div>
+
+    ${typeRows ? `<div class="card">
+      <h2 class="h2">По типам работ</h2>
+      ${typeRows}
+    </div>` : ''}
+  </div></div>`;
+                                                                                    }
 }
 
 /* ============================================================
@@ -906,6 +1045,8 @@ document.addEventListener('click', e => {
     case 'close-free': ui.newFree = false; ui.tempPhotos = []; render(); break;
     case 'submit-free': submitFree(); break;
     case 'open-myfree': ui.openTask = id; ui.freeView = true; renderStudentMyFree(); break;
+      case 'open-progress': ui.showProgress = true; render(); break;
+case 'close-progress': ui.showProgress = false; render(); break;
     case 'rm-photo': ui.tempPhotos.splice(+el.dataset.idx,1); renderPhotoPreview(); break;
     case 'zoom': {
       const src = el.dataset.imgSrc || el.getAttribute('src');
