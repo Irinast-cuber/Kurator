@@ -8,7 +8,7 @@
   :root{
     --cream:#F4F0E8; --paper:#fff; --ink:#14110F; --muted:#6B6459; --line:#E2DCD1;
     --accent:#C14E31; --accent-soft:#F7E9E4; --olive:#4A5340; --ok:#3F6B4A; --blue:#3A5A78;
-    --fire:#E67E22;
+    --fire:#E67E22; --urgent:#B83232;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
@@ -24,9 +24,16 @@
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
   .topbar-inner{max-width:1000px;margin:0 auto;padding:0 20px;height:62px;
     display:flex;align-items:center;justify-content:space-between;gap:16px}
-  .logo{font-family:Georgia,serif;font-size:19px;letter-spacing:.1em;font-weight:700}
+  .logo{font-family:Georgia,serif;font-size:19px;letter-spacing:.1em;font-weight:700;position:relative}
   .logo span{color:var(--accent)}
+  .logo-badge{position:absolute;top:-6px;right:-22px;background:var(--accent);color:#fff;
+    font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;font-family:-apple-system,sans-serif;
+    letter-spacing:0}
   .who{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+  .who .notif-btn{font-size:16px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .who .notif-btn:hover{background:var(--accent-soft)}
+  .who .notif-btn.on{color:var(--ok)}
+  .who .notif-btn.off{color:var(--muted);opacity:.5}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
     padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;font-family:inherit;
@@ -73,10 +80,12 @@
   .badge.ok{background:#E3EDE5;color:var(--ok)}
   .badge.blue{background:#E4EBF1;color:var(--blue)}
   .badge.fire{background:#FCEBD9;color:var(--fire)}
+  .badge.urgent{background:#F7DADA;color:var(--urgent);font-weight:700}
 
   .task{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--paper);
     margin-bottom:12px;transition:.18s;cursor:pointer}
   .task:hover{border-color:var(--ink);transform:translateY(-1px)}
+  .task.urgent{border-color:#E8B5B5; background:linear-gradient(180deg,#FFF8F6 0%,#fff 100%)}
   .task-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
   .meta{font-size:13px;color:var(--muted)}
   .score{font-family:Georgia,serif;font-size:20px;white-space:nowrap}
@@ -138,7 +147,6 @@
   .file-btn:hover{border-color:var(--ink);color:var(--ink)}
   .file-btn.loading{opacity:.6;cursor:wait}
 
-  /* ---------- СТРИК (ОГОНЁК) ---------- */
   .streak-card{
     background:linear-gradient(135deg, #FFF4E6 0%, #FFE4C7 100%);
     border:1px solid #F5D0A9; border-radius:14px; padding:22px 24px;
@@ -151,16 +159,45 @@
   .streak-status .today{font-size:13px; color:var(--ok); font-weight:600}
   .streak-status .missed{font-size:13px; color:var(--accent); font-weight:600}
 
+  /* ---------- КНОПКИ БАЛЛОВ ---------- */
+  .score-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .score-btn{min-width:46px;height:46px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--paper);font-family:Georgia,serif;font-size:20px;color:var(--ink);
+    cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
+  .score-btn:hover{border-color:var(--ink);background:var(--cream)}
+  .score-btn.active{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+  .score-btn.zero{color:var(--accent)}
+
+  .templates{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tpl{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--cream);
+    font-size:12.5px;font-family:inherit;color:var(--muted);cursor:pointer;transition:.15s}
+  .tpl:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .action-row .btn{flex:1;min-width:150px}
+
+  /* ---------- БАННЕР УВЕДОМЛЕНИЙ ---------- */
+  .notif-banner{
+    background:linear-gradient(135deg, #EAF3FF 0%, #DDEAFF 100%);
+    border:1px solid #B8D4F5; border-radius:12px; padding:14px 18px; margin-bottom:18px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .notif-banner-icon{font-size:24px}
+  .notif-banner-text{flex:1; min-width:200px; font-size:14px; color:#1A4D8F}
+  .notif-banner .btn{padding:8px 16px;font-size:13px;background:#1A4D8F;color:#fff}
+  .notif-banner .btn:hover{background:#0F3668}
+  .notif-banner .close-x{background:none;border:none;cursor:pointer;font-size:18px;color:#1A4D8F;opacity:.6;padding:4px 8px}
+  .notif-banner .close-x:hover{opacity:1}
+
   .lightbox{position:fixed;inset:0;background:rgba(20,17,15,.92);z-index:1000;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
   .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
 
   #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);
     color:var(--cream);padding:12px 22px;border-radius:999px;font-size:14px;opacity:0;
-    pointer-events:none;transition:.3s;z-index:999}
+    pointer-events:none;transition:.3s;z-index:999;max-width:90%;text-align:center}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 
-  /* ---------- ЛЕНТА ОТМЕТОК ---------- */
   .checkin{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--paper);
     margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
   .checkin-emoji{font-size:22px;line-height:1}
@@ -181,6 +218,7 @@
     .photos{grid-template-columns:repeat(2,1fr)}
     .streak-card{flex-direction:column; text-align:center; gap:10px}
     .streak-status{margin:0; text-align:center}
+    .action-row .btn{min-width:100%}
   }
 </style>
 </head>
@@ -217,12 +255,19 @@ if (firebaseConfig.databaseURL && typeof firebase !== 'undefined') {
    ============================================================ */
 const LS_DATA = 'tezis.data.v1';
 const LS_SES  = 'tezis.session.v1';
+const LS_NOTIF = 'tezis.notif.v1';
 const blank = () => ({ curatorPin:'1234', students:[], tasks:[], subs:[], freesubs:[], checkins:[] });
 
 let state = blank();
 let session = null;
 let ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
            filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
+
+/* Служебные переменные для уведомлений */
+let lastPendingCount = -1;
+let lastReminderAt = 0;
+const REMINDER_INTERVAL = 2 * 60 * 60 * 1000; // 2 часа
+let notifBannerDismissed = localStorage.getItem('tezis.notifBanner') === 'dismissed';
 
 /* ============================================================
    3. УТИЛИТЫ
@@ -234,6 +279,19 @@ function fmt(d){ if(!d) return ''; const dt=new Date(d); if(isNaN(dt)) return d;
   return dt.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}); }
 function fmtFull(d){ if(!d) return ''; const dt=new Date(d); if(isNaN(dt)) return d;
   return dt.toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
+function fmtRel(d){
+  if (!d) return '';
+  const diff = Date.now() - new Date(d).getTime();
+  const min = Math.floor(diff/60000);
+  if (min < 1) return 'только что';
+  if (min < 60) return min + ' мин назад';
+  const h = Math.floor(min/60);
+  if (h < 24) return h + ' ч назад';
+  const days = Math.floor(h/24);
+  if (days === 1) return 'вчера';
+  if (days < 7) return days + ' дн назад';
+  return fmtFull(d);
+}
 const todayStr = () => new Date().toISOString().slice(0,10);
 const isOverdue = a => a.due && a.due < todayStr();
 
@@ -241,7 +299,6 @@ let toastTimer;
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200); }
 
-/* Сжатие фото в base64 */
 function compressImage(file, maxSide=1000, quality=0.6){
   return new Promise((resolve,reject)=>{
     const reader = new FileReader();
@@ -263,28 +320,18 @@ function compressImage(file, maxSide=1000, quality=0.6){
   });
 }
 
-/* ---------- СТРИК ---------- */
-function dayKey(d){
-  const dt = d ? new Date(d) : new Date();
-  return dt.toISOString().slice(0,10);
-}
+function dayKey(d){ const dt = d ? new Date(d) : new Date(); return dt.toISOString().slice(0,10); }
 
 function calcStreak(studentId){
-  // Учитываем и сдачи работ (subs+freesubs), и отметки (checkins)
   const mySubs = state.subs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
   const myFree = state.freesubs.filter(s=>s.studentId===studentId).map(s=>dayKey(s.at));
   const myChk  = (state.checkins||[]).filter(c=>c.studentId===studentId).map(c=>dayKey(c.at));
   const days = new Set([...mySubs, ...myFree, ...myChk]);
-
   let streak = 0;
   let d = new Date();
-  // Проверяем сегодня
   const today = dayKey(d);
   const yesterday = dayKey(new Date(Date.now() - 24*3600*1000));
-
   if (!days.has(today) && !days.has(yesterday)) return 0;
-
-  // Считаем
   for (let i=0; i<365; i++){
     const k = dayKey(d);
     if (days.has(k)) streak++;
@@ -302,6 +349,84 @@ function activeToday(studentId){
   return mySubs.includes(today) || myFree.includes(today) || myChk.includes(today);
 }
 
+function pluralDays(n){
+  const a = n % 10, b = n % 100;
+  if (b >= 11 && b <= 14) return 'дней';
+  if (a === 1) return 'день';
+  if (a >= 2 && a <= 4) return 'дня';
+  return 'дней';
+}
+
+/* ============================================================
+   УВЕДОМЛЕНИЯ
+   ============================================================ */
+function canNotify(){
+  return typeof Notification !== 'undefined' && Notification.permission === 'granted';
+}
+
+function askNotifications(){
+  if (typeof Notification === 'undefined') {
+    toast('Браузер не поддерживает уведомления');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    toast('Уведомления уже включены 👍');
+    return;
+  }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      toast('Уведомления включены 🔔');
+      showNotif('ТЕЗИС', 'Уведомления работают! Теперь ты не пропустишь работы учеников.');
+    } else {
+      toast('Уведомления не разрешены');
+    }
+    render();
+  });
+}
+
+function showNotif(title, body, tag){
+  if (!canNotify()) return;
+  try {
+    const n = new Notification(title, {
+      body,
+      tag: tag || 'tezis',
+      icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="20" fill="#14110F"/><text x="48" y="66" font-family="Georgia,serif" font-size="52" font-weight="700" fill="#F4F0E8" text-anchor="middle">Т</text></svg>')
+    });
+    n.onclick = () => { window.focus(); n.close(); };
+  } catch(e){ console.warn('Не удалось показать уведомление', e); }
+}
+
+function countPending(){
+  return state.subs.filter(s=>s.score==null).length
+       + state.freesubs.filter(s=>s.score==null).length;
+}
+
+function checkForNewSubmissions(){
+  if (!session || session.role !== 'curator') return;
+  const cur = countPending();
+  if (lastPendingCount >= 0 && cur > lastPendingCount){
+    const diff = cur - lastPendingCount;
+    showNotif(
+      diff === 1 ? 'Новая работа 🎉' : 'Новые работы 🎉',
+      diff === 1 ? 'Ученик прислал работу на проверку' : `Пришло работ: ${diff}`,
+      'new-work'
+    );
+  }
+  lastPendingCount = cur;
+}
+
+/* Напоминание раз в 2 часа */
+setInterval(() => {
+  if (!session || session.role !== 'curator') return;
+  const cur = countPending();
+  if (cur > 0 && Date.now() - lastReminderAt > REMINDER_INTERVAL){
+    lastReminderAt = Date.now();
+    showNotif('ТЕЗИС — пора проверить',
+      cur === 1 ? 'У тебя 1 непроверенная работа' : `У тебя ${cur} непроверенных работ`,
+      'reminder');
+  }
+}, 5 * 60 * 1000); // проверка каждые 5 минут
+
 /* ============================================================
    4. ХРАНЕНИЕ
    ============================================================ */
@@ -318,6 +443,8 @@ function boot(){
       const v = snap.val()||{};
       state = { curatorPin:v.curatorPin||'1234', students:v.students||[], tasks:v.tasks||[],
                 subs:v.subs||[], freesubs:v.freesubs||[], checkins:v.checkins||[] };
+      checkForNewSubmissions();
+      updateTitle();
       render();
     }, err => { console.error(err); toast('Нет доступа к базе'); });
   } else {
@@ -327,13 +454,22 @@ function boot(){
   }
 }
 
+function updateTitle(){
+  if (session && session.role === 'curator'){
+    const c = countPending();
+    document.title = c > 0 ? `(${c}) ТЕЗИС — кабинет` : 'ТЕЗИС — кабинет подготовки к ЕГЭ';
+  } else {
+    document.title = 'ТЕЗИС — кабинет подготовки к ЕГЭ';
+  }
+}
+
 /* ============================================================
    5. РОУТЕР
    ============================================================ */
 function render(){
   const app = $('app');
   if (!session){ app.innerHTML = viewLogin(); return; }
-  if (session.role==='curator'){ app.innerHTML = viewCurator(); return; }
+  if (session.role==='curator'){ app.innerHTML = viewCurator(); updateTitle(); return; }
   const me = state.students.find(s=>s.id===session.id);
   if (!me){ session=null; localStorage.removeItem(LS_SES); app.innerHTML = viewLogin(); return; }
   app.innerHTML = viewStudent(me);
@@ -375,9 +511,13 @@ function loginStudentHTML(){
    7. КУРАТОР
    ============================================================ */
 function viewCurator(){
-  const pending = state.subs.filter(s=>s.score==null).length
-                + state.freesubs.filter(s=>s.score==null).length;
+  const pending = countPending();
+  const urgent = state.subs.filter(s=>s.score==null && Date.now()-new Date(s.at).getTime() > 2*24*3600*1000).length
+               + state.freesubs.filter(s=>s.score==null && Date.now()-new Date(s.at).getTime() > 2*24*3600*1000).length;
   const todayCheckins = (state.checkins||[]).filter(c=>dayKey(c.at)===dayKey()).length;
+
+  const notifOn = canNotify();
+  const showBanner = !notifOn && !notifBannerDismissed && typeof Notification !== 'undefined';
 
   const tabBtn = (k,l,c) => `<button class="tab ${ui.tab===k?'active':''}" data-act="tab" data-tab="${k}">${l}${c?`<span class="cnt">${c}</span>`:''}</button>`;
   let body = '';
@@ -387,10 +527,25 @@ function viewCurator(){
   else if (ui.tab==='activity') body = tabActivity();
   else body = tabSettings();
 
+  const bannerHTML = showBanner ? `
+    <div class="notif-banner">
+      <div class="notif-banner-icon">🔔</div>
+      <div class="notif-banner-text">
+        <b>Включи уведомления</b>, чтобы не забывать проверять работы. Они придут прямо в браузер.
+      </div>
+      <button class="btn" data-act="ask-notif">Включить</button>
+      <button class="close-x" data-act="dismiss-notif-banner" title="Скрыть">✕</button>
+    </div>` : '';
+
   return `<div class="topbar"><div class="topbar-inner">
-    <div class="logo">Т<span>Е</span>ЗИС</div>
-    <div class="who"><span>Куратор</span>
-    <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button></div>
+    <div class="logo">Т<span>Е</span>ЗИС${pending?`<span class="logo-badge">${pending}</span>`:''}</div>
+    <div class="who">
+      <button class="notif-btn ${notifOn?'on':'off'}" data-act="ask-notif" title="${notifOn?'Уведомления включены':'Включить уведомления'}">
+        ${notifOn ? '🔔' : '🔕'}
+      </button>
+      <span>Куратор</span>
+      <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button>
+    </div>
   </div></div>
   <div class="container">
     <div class="tabs">
@@ -400,7 +555,7 @@ function viewCurator(){
       ${tabBtn('activity','Активность',todayCheckins)}
       ${tabBtn('settings','Настройки')}
     </div>
-    <div class="page">${body}</div>
+    <div class="page">${bannerHTML}${body}</div>
   </div>`;
 }
 
@@ -433,14 +588,6 @@ function studentCard(s){
     </div>
     <button class="btn btn-danger" data-act="del-student" data-id="${s.id}">Удалить</button>
   </div></div>`;
-}
-
-function pluralDays(n){
-  const a = n % 10, b = n % 100;
-  if (b >= 11 && b <= 14) return 'дней';
-  if (a === 1) return 'день';
-  if (a >= 2 && a <= 4) return 'дня';
-  return 'дней';
 }
 
 function tabTasks(){
@@ -499,19 +646,49 @@ function taskCardCurator(a){
   </div></div>`;
 }
 
+function isUrgent(sub){
+  if (sub.score != null) return false;
+  const hours = (Date.now() - new Date(sub.at).getTime()) / (1000*60*60);
+  return hours > 48;
+}
+
 function tabCheck(){
   let items = [];
   state.subs.forEach(s => items.push({ kind:'task', ...s }));
   state.freesubs.forEach(s => items.push({ kind:'free', ...s }));
-  items.sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+
+  // Сначала срочные, потом по дате (свежие вперёд)
+  items.sort((a,b)=>{
+    const ua = isUrgent(a) ? 1 : 0;
+    const ub = isUrgent(b) ? 1 : 0;
+    if (ua !== ub) return ub - ua;
+    return (b.at||'').localeCompare(a.at||'');
+  });
+
   if (ui.filter==='pending') items = items.filter(s=>s.score==null);
   if (ui.filter==='done')    items = items.filter(s=>s.score!=null);
 
+  const pendingCount = state.subs.filter(s=>s.score==null).length
+                     + state.freesubs.filter(s=>s.score==null).length;
+  const urgentCount = [...state.subs, ...state.freesubs].filter(isUrgent).length;
+
   const pill = (k,l) => `<button class="pill ${ui.filter===k?'active':''}" data-act="set-filter" data-filter="${k}">${l}</button>`;
+
+  const urgentBanner = (ui.filter !== 'done' && urgentCount > 0) ? `
+    <div class="notif-banner" style="background:linear-gradient(135deg,#FFF1EE 0%,#FCE0D9 100%);border-color:#F0B8AA">
+      <div class="notif-banner-icon">🚨</div>
+      <div class="notif-banner-text" style="color:#8B2C1A">
+        <b>${urgentCount}</b> ${urgentCount===1?'работа ждёт':'работ ждут'} проверки больше 2 дней — они сверху списка.
+      </div>
+    </div>` : '';
+
   return `<div class="pills">
-    ${pill('pending','Ждут проверки')}${pill('done','Проверенные')}${pill('all','Все')}
+    ${pill('pending','Ждут проверки' + (pendingCount?` (${pendingCount})`:''))}
+    ${pill('done','Проверенные')}
+    ${pill('all','Все')}
   </div>
-  ${items.length ? items.map(subCard).join('') : `<div class="empty">Здесь пусто.</div>`}`;
+  ${urgentBanner}
+  ${items.length ? items.map(subCard).join('') : `<div class="empty">Здесь пусто. Ура 🎉</div>`}`;
 }
 function subCard(s){
   let topic, max, kind, id, photos;
@@ -524,21 +701,35 @@ function subCard(s){
     photos = s.images||[];
   }
   const st = state.students.find(x=>x.id===s.studentId);
-  return `<div class="task" data-act="open-check" data-id="${id}" data-kind="${s.kind}">
+  const urgent = isUrgent(s);
+  return `<div class="task ${urgent?'urgent':''}" data-act="open-check" data-id="${id}" data-kind="${s.kind}">
     <div class="task-head">
       <div style="min-width:0">
         <div class="badges">
-          ${s.score!=null ? `<span class="badge ok">Проверено</span>` : `<span class="badge">Ждёт проверки</span>`}
+          ${s.score!=null ? `<span class="badge ok">Проверено</span>` :
+            urgent ? `<span class="badge urgent">🚨 Срочно</span>` :
+            `<span class="badge">Ждёт проверки</span>`}
           ${s.kind==='free' ? `<span class="badge neutral">Свободная</span>` : ''}
           <span class="badge neutral">${esc(kind)}</span>
         </div>
         <h3 class="h3">${esc(topic)}</h3>
-        <div class="meta">${esc(st?st.name:'—')} · сдано ${fmtFull(s.at)}${photos.length?` · 📎 ${photos.length}`:''}</div>
+        <div class="meta">${esc(st?st.name:'—')} · ${fmtRel(s.at)}${photos.length?` · 📎 ${photos.length}`:''}</div>
       </div>
       <div class="score">${s.score!=null?`${s.score} / ${max}`:'—'}</div>
     </div>
   </div>`;
 }
+
+const COMMENT_TEMPLATES = [
+  'Отличная работа!',
+  'Хорошо, но не хватает примеров',
+  'Проверь оформление плана',
+  'Добавь определения понятий',
+  'Смотри на критерии — потеряны баллы',
+  'Есть ошибка в терминологии',
+  'Отличные примеры 👍',
+  'Нужно раскрыть тему глубже'
+];
 
 function viewCheckDetail(){
   const sId = ui.openCheck, kind = ui.openFree;
@@ -559,6 +750,25 @@ function viewCheckDetail(){
     ${images.map((img,i)=>`<img src="${img}" data-act="zoom" data-img="${i}" data-target="${s.id}" data-kind="${kind}">`).join('')}
   </div>` : '';
 
+  // Кнопки баллов
+  const scoreBtns = [];
+  for (let i = 0; i <= max; i++){
+    scoreBtns.push(`<button class="score-btn ${s.score===i?'active':''} ${i===0?'zero':''}"
+      data-act="set-score" data-val="${i}">${i}</button>`);
+  }
+
+  // Шаблоны комментариев
+  const tplHTML = COMMENT_TEMPLATES.map(t =>
+    `<button class="tpl" data-act="use-tpl" data-tpl="${esc(t)}">${esc(t)}</button>`).join('');
+
+  // Есть ли следующая работа
+  const allPending = [
+    ...state.subs.filter(x=>x.score==null).map(x=>({id:x.id, kind:'task', at:x.at})),
+    ...state.freesubs.filter(x=>x.score==null).map(x=>({id:x.id, kind:'free', at:x.at}))
+  ].filter(x => !(x.id===s.id && x.kind===kind))
+   .sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+  const hasNext = allPending.length > 0;
+
   return `<button class="btn btn-ghost btn-sm" data-act="back">← К списку</button>
   <div class="card" style="margin-top:16px">
     <div class="badges">
@@ -566,7 +776,7 @@ function viewCheckDetail(){
       <span class="badge neutral">${esc(type)}</span>
     </div>
     <h1 class="display h1" style="margin:10px 0 6px">${esc(topic)}</h1>
-    <div class="meta">${esc(st?st.name:'—')} · сдано ${fmtFull(s.at)}</div>
+    <div class="meta">${esc(st?st.name:'—')} · ${fmtRel(s.at)}</div>
 
     ${taskText ? `<div class="block-label">Текст задания</div><div class="answer">${esc(taskText)}</div>` : ''}
     ${taskLink ? `<a class="link" href="${esc(taskLink)}" target="_blank" rel="noopener">Материал к заданию →</a>` : ''}
@@ -577,20 +787,26 @@ function viewCheckDetail(){
     ${photosHTML}
 
     <hr class="hr">
-    <div class="row">
-      <div class="field"><label class="label">Балл (из ${max})</label>
-        <input class="input" id="cScore" type="number" min="0" value="${s.score??''}" placeholder="0"></div>
+    <div class="field">
+      <label class="label">Балл (из ${max})</label>
+      <div class="score-buttons">${scoreBtns}</div>
+      <input class="input" id="cScore" type="number" min="0" max="${max}" value="${s.score??''}" placeholder="или введи вручную" style="max-width:200px">
     </div>
-    <div class="field"><label class="label">Комментарий ученику</label>
-      <textarea class="textarea" id="cFb" placeholder="Что получилось, что поправить...">${esc(s.feedback||'')}</textarea></div>
-    <button class="btn btn-primary" data-act="save-check" data-id="${s.id}" data-kind="${kind}">Сохранить проверку</button>
+    <div class="field">
+      <label class="label">Комментарий ученику</label>
+      <div class="templates">${tplHTML}</div>
+      <textarea class="textarea" id="cFb" placeholder="Что получилось, что поправить...">${esc(s.feedback||'')}</textarea>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-ghost" data-act="save-check" data-id="${s.id}" data-kind="${kind}" data-next="0">Сохранить</button>
+      ${hasNext ? `<button class="btn btn-primary" data-act="save-check" data-id="${s.id}" data-kind="${kind}" data-next="1">Сохранить и следующая →</button>` : ''}
+    </div>
   </div>`;
 }
 
-/* ---------- ВКЛАДКА "АКТИВНОСТЬ" У КУРАТОРА ---------- */
 function tabActivity(){
   const items = (state.checkins||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
-
   const todayItems = items.filter(c=>dayKey(c.at)===dayKey());
 
   return `
@@ -616,7 +832,7 @@ function tabActivity(){
 
   <h2 class="h2" style="margin-top:20px">Последние отметки</h2>
   ${items.length ? items.slice(0, 100).map(checkinCardCurator).join('')
-    : `<div class="empty">Пока никто не отмечался. Как только ученики начнут отмечаться — увидишь здесь.</div>`}`;
+    : `<div class="empty">Пока никто не отмечался.</div>`}`;
 }
 
 function checkinCardCurator(c){
@@ -633,12 +849,29 @@ function checkinCardCurator(c){
 }
 
 function tabSettings(){
+  const notifOn = canNotify();
   return `<div class="card" style="margin-bottom:18px">
+    <h2 class="h2">🔔 Уведомления</h2>
+    <p class="meta" style="margin-bottom:14px">
+      ${notifOn
+        ? 'Уведомления включены. Когда ученик присылает работу — тебе придёт пуш в браузер. Напоминание раз в 2 часа, если что-то ждёт проверки.'
+        : 'Уведомления выключены. Включи их, чтобы не пропускать работы.'}
+    </p>
+    ${notifOn
+      ? `<button class="btn btn-ghost" data-act="test-notif">Проверить уведомление</button>`
+      : `<button class="btn btn-primary" data-act="ask-notif">Включить уведомления</button>`}
+    <div class="hint" style="margin-top:14px">
+      ⚠️ Уведомления работают, когда вкладка с сайтом открыта (можно свёрнута). Если полностью закроешь браузер — пуши не придут. На iPhone в Safari уведомления работают только после «Добавить на экран Домой».
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
     <h2 class="h2">PIN куратора</h2>
     <div class="field" style="max-width:240px"><label class="label">Новый PIN</label>
       <input class="input" id="newPin" inputmode="numeric" value="${esc(state.curatorPin)}"></div>
     <button class="btn btn-primary" data-act="save-pin">Сохранить</button>
   </div>
+
   <div class="card" style="margin-bottom:18px">
     <h2 class="h2">Резервная копия</h2>
     <p class="meta" style="margin-bottom:16px">Выгрузи все данные в файл или загрузи обратно.</p>
@@ -647,6 +880,7 @@ function tabSettings(){
       <button class="btn btn-ghost" data-act="import">Загрузить JSON</button>
     </div>
   </div>
+
   <div class="card">
     <h2 class="h2">Режим работы</h2>
     <p class="meta" style="margin-bottom:14px">${CLOUD
@@ -875,7 +1109,6 @@ function viewStudentFreeForm(me){
   </div></div>`;
 }
 
-/* ---------- ФОРМА ОТМЕТКИ "ЧТО ВЫУЧИЛ" ---------- */
 function viewCheckinForm(me){
   return `${studentTopbar(me)}<div class="container"><div class="page">
     <button class="btn btn-ghost btn-sm" data-act="close-checkin">← Назад</button>
@@ -919,7 +1152,6 @@ function viewStudentMyFree(me){
   </div></div>`;
 }
 
-/* ---------- ЭКРАН ПРОГРЕССА ---------- */
 function viewStudentProgress(me){
   const mySubs = state.subs.filter(s=>s.studentId===me.id).map(s=>{
     const a = state.tasks.find(t=>t.id===s.taskId);
@@ -1052,7 +1284,9 @@ function doLoginCurator(){
   if (pin !== String(state.curatorPin)) return toast('Неверный PIN');
   session = { role:'curator' };
   localStorage.setItem(LS_SES, JSON.stringify(session));
-  ui.tab = 'students'; render();
+  ui.tab = 'students';
+  lastPendingCount = countPending(); // фиксируем стартовое значение
+  render();
 }
 function doLoginStudent(){
   const sid = $('sid')?.value;
@@ -1098,7 +1332,6 @@ function delTask(id){
   save();
 }
 
-/* Автоматическая отметка о сдаче работы */
 function addSubmissionCheckin(studentId, topic, kind, taskType){
   state.checkins = state.checkins || [];
   const prefix = kind==='free' ? 'Сдал(а) свободную работу' : 'Сдал(а) задание';
@@ -1126,7 +1359,6 @@ function submitWork(taskId){
   const ex = state.subs.find(s=>s.id===obj.id);
   if (ex) Object.assign(ex, obj); else state.subs.push(obj);
 
-  // Автоматическая отметка
   if (!ex && a) addSubmissionCheckin(sid, a.topic||'Задание', 'task', a.type);
 
   ui.openTask = null; ui.tempPhotos = [];
@@ -1151,7 +1383,6 @@ function submitFree(){
   save(); toast('Работа отправлена 🔥');
 }
 
-/* Отметка "что выучил" */
 function submitCheckin(){
   const text = $('chText').value.trim();
   if (!text) return toast('Напиши пару слов о том, что выучил');
@@ -1176,16 +1407,38 @@ function likeCheckin(id){
   toast(c.likedByCurator ? 'Лайк отправлен ❤️' : 'Лайк убран');
 }
 
-function saveCheck(id, kind){
+function saveCheck(id, kind, next){
   let s;
   if (kind==='free') s = state.freesubs.find(x=>x.id===id);
   else s = state.subs.find(x=>x.id===id);
   if (!s) return;
   const raw = $('cScore').value.trim();
   if (raw==='') return toast('Поставь балл');
+
   s.score = Number(raw);
   s.feedback = $('cFb').value.trim();
   s.checkedAt = new Date().toISOString();
+
+  if (next){
+    // Ищем следующую непроверенную
+    const allPending = [
+      ...state.subs.filter(x=>x.score==null && x.id !== id).map(x=>({id:x.id, kind:'task', at:x.at})),
+      ...state.freesubs.filter(x=>x.score==null && x.id !== id).map(x=>({id:x.id, kind:'free', at:x.at}))
+    ].sort((a,b)=>{
+      const ua = isUrgent(a) ? 1 : 0;
+      const ub = isUrgent(b) ? 1 : 0;
+      if (ua !== ub) return ub - ua;
+      return (b.at||'').localeCompare(a.at||'');
+    });
+    if (allPending.length){
+      ui.openCheck = allPending[0].id;
+      ui.openFree = allPending[0].kind;
+      save();
+      toast('Сохранено, следующая →');
+      return;
+    }
+  }
+
   ui.openCheck = null;
   save(); toast('Проверка сохранена');
 }
@@ -1249,6 +1502,8 @@ document.addEventListener('click', e => {
       session = null; localStorage.removeItem(LS_SES);
       ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
              filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
+      lastPendingCount = -1;
+      updateTitle();
       render(); break;
     case 'tab': ui.tab = el.dataset.tab; ui.openCheck=null; render(); break;
     case 'set-filter': ui.filter = el.dataset.filter; render(); break;
@@ -1260,7 +1515,7 @@ document.addEventListener('click', e => {
     case 'open-check': ui.openCheck = id; ui.openFree = kind; render(); break;
     case 'back': ui.openTask = null; ui.openCheck = null; ui.tempPhotos = []; render(); break;
     case 'submit-work': submitWork(id); break;
-    case 'save-check': saveCheck(id, kind); break;
+    case 'save-check': saveCheck(id, kind, el.dataset.next==='1'); break;
     case 'save-pin': savePin(); break;
     case 'export': exportJSON(); break;
     case 'import': $('importFile').click(); break;
@@ -1284,6 +1539,33 @@ document.addEventListener('click', e => {
       if (src) showLightbox(src);
       break;
     }
+
+    /* НОВОЕ — кнопки баллов, шаблоны, уведомления */
+    case 'set-score': {
+      const inp = $('cScore');
+      if (inp) inp.value = el.dataset.val;
+      document.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      break;
+    }
+    case 'use-tpl': {
+      const ta = $('cFb');
+      if (ta){
+        ta.value = ta.value ? (ta.value + '\n' + el.dataset.tpl) : el.dataset.tpl;
+        ta.focus();
+      }
+      break;
+    }
+    case 'ask-notif': askNotifications(); break;
+    case 'test-notif':
+      showNotif('ТЕЗИС', 'Это тестовое уведомление. Всё работает 👍', 'test');
+      toast('Уведомление отправлено');
+      break;
+    case 'dismiss-notif-banner':
+      notifBannerDismissed = true;
+      localStorage.setItem('tezis.notifBanner', 'dismissed');
+      render();
+      break;
   }
 });
 
@@ -1331,4 +1613,4 @@ $('importFile').addEventListener('change', e => {
 boot();
 </script>
 </body>
-</html>
+  </html>
