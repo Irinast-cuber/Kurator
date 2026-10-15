@@ -14,7 +14,7 @@
   html{-webkit-text-size-adjust:100%}
   body{background:var(--cream);color:var(--ink);min-height:100vh;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   .display{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.02em;line-height:1.12}
   .container{max-width:1000px;margin:0 auto;padding:0 20px}
   .muted{color:var(--muted)}
@@ -27,13 +27,18 @@
   .logo{font-family:Georgia,serif;font-size:19px;letter-spacing:.1em;font-weight:700;position:relative}
   .logo span{color:var(--accent)}
   .logo-badge{position:absolute;top:-6px;right:-22px;background:var(--accent);color:#fff;
-    font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;font-family:-apple-system,sans-serif;
-    letter-spacing:0}
+    font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;font-family:-apple-system,sans-serif;letter-spacing:0}
   .who{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
   .who .notif-btn{font-size:16px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
   .who .notif-btn:hover{background:var(--accent-soft)}
   .who .notif-btn.on{color:var(--ok)}
   .who .notif-btn.off{color:var(--muted);opacity:.5}
+
+  .avatar-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--paper);
+    font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:.18s}
+  .avatar-btn:hover{border-color:var(--ink);transform:scale(1.06)}
+  .avatar-small{width:30px;height:30px;border-radius:50%;background:var(--cream);display:inline-flex;
+    align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
     padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;font-family:inherit;
@@ -103,11 +108,12 @@
   .link:hover{border-color:var(--accent)}
   .notice{margin-top:16px;padding:12px 16px;border-radius:8px;background:#E4EBF1;
     color:var(--blue);font-size:13.5px}
-  .result{margin-top:20px;padding:20px;border-radius:10px;background:#E3EDE5;text-align:center}
-  .result-score{font-family:Georgia,serif;font-size:38px;line-height:1;color:var(--ok)}
-  .result-score span{font-size:18px;color:var(--muted)}
+  .result{margin-top:20px;padding:24px;border-radius:14px;background:#E3EDE5;text-align:center}
+  .result-score{font-family:Georgia,serif;font-size:44px;line-height:1;color:var(--ok)}
+  .result-score span{font-size:20px;color:var(--muted)}
   .result-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;
     color:var(--ok);font-weight:600;margin-top:6px}
+  .result-reaction{font-size:56px;margin-top:14px;line-height:1;animation:popIn .5s cubic-bezier(.68,-0.55,.27,1.55)}
 
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
   .stat{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
@@ -147,17 +153,83 @@
   .file-btn:hover{border-color:var(--ink);color:var(--ink)}
   .file-btn.loading{opacity:.6;cursor:wait}
 
+  /* ============ СТРИК / УРОВНИ ============ */
   .streak-card{
     background:linear-gradient(135deg, #FFF4E6 0%, #FFE4C7 100%);
-    border:1px solid #F5D0A9; border-radius:14px; padding:22px 24px;
-    display:flex; align-items:center; gap:18px; margin-bottom:22px;
+    border:1px solid #F5D0A9; border-radius:16px; padding:22px 24px;
+    margin-bottom:18px; position:relative; overflow:hidden;
   }
-  .streak-emoji{font-size:46px; line-height:1; filter:drop-shadow(0 2px 4px rgba(230,126,34,.3))}
-  .streak-num{font-family:Georgia,serif; font-size:34px; line-height:1; color:#8B4513; font-weight:700}
-  .streak-label{font-size:13px; color:#8B4513; opacity:.8; margin-top:2px}
+  .streak-card.lv-1{background:linear-gradient(135deg,#FFEEDD 0%,#FFD9A8 100%)}
+  .streak-card.lv-2{background:linear-gradient(135deg,#FFE4C7 0%,#FFC77D 100%)}
+  .streak-card.lv-3{background:linear-gradient(135deg,#FFD9A8 0%,#F5A623 100%)}
+  .streak-card.lv-4{background:linear-gradient(135deg,#F5A623 0%,#E67E22 100%); color:#fff}
+  .streak-card.lv-5{background:linear-gradient(135deg,#7B68EE 0%,#4A3FCD 100%); color:#fff}
+  .streak-card.lv-5 .streak-num,.streak-card.lv-5 .streak-label{color:#fff}
+  .streak-card.lv-5 .streak-label{opacity:.9}
+
+  .streak-top{display:flex;align-items:center;gap:18px}
+  .streak-emoji{font-size:48px; line-height:1; filter:drop-shadow(0 3px 6px rgba(0,0,0,.15))}
+  .streak-num{font-family:Georgia,serif; font-size:38px; line-height:1; color:#8B4513; font-weight:700}
+  .streak-label{font-size:13px; color:#8B4513; opacity:.85; margin-top:3px}
+  .streak-level-name{font-family:Georgia,serif; font-size:15px; font-style:italic;
+    color:#8B4513; margin-top:2px; font-weight:600}
   .streak-status{margin-left:auto; text-align:right}
-  .streak-status .today{font-size:13px; color:var(--ok); font-weight:600}
-  .streak-status .missed{font-size:13px; color:var(--accent); font-weight:600}
+  .streak-status .today{font-size:13px; color:#2E7D32; font-weight:600; background:rgba(255,255,255,.6);
+    padding:6px 12px; border-radius:999px}
+  .streak-status .missed{font-size:13px; color:#fff; font-weight:600}
+  .streak-status .btn{background:var(--ink); color:#fff}
+
+  .level-bar{margin-top:16px; background:rgba(255,255,255,.5); border-radius:999px; height:8px; overflow:hidden; position:relative}
+  .level-bar-fill{height:100%; background:#8B4513; border-radius:999px; transition:width .6s ease}
+  .level-bar-text{margin-top:6px; font-size:11.5px; opacity:.75}
+
+  /* ============ МОТИВАШКА ДНЯ ============ */
+  .motivation-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    padding:16px 20px; margin-bottom:18px; text-align:center;
+    font-family:Georgia,serif; font-style:italic; font-size:15px; color:var(--ink);
+    position:relative;
+  }
+  .motivation-card::before{content:'"'; position:absolute; top:-2px; left:14px;
+    font-size:44px; color:var(--accent-soft); font-family:Georgia,serif; line-height:1}
+
+  /* ============ КОНФЕТТИ ============ */
+  .confetti-piece{position:fixed; width:10px; height:10px; top:-20px;
+    pointer-events:none; z-index:2000; animation:fall linear forwards}
+  @keyframes fall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1 }
+    100%{ transform:translateY(110vh) rotate(720deg); opacity:0.6 }
+  }
+  @keyframes popIn{
+    0%{ transform:scale(0); opacity:0 }
+    60%{ transform:scale(1.15); opacity:1 }
+    100%{ transform:scale(1); opacity:1 }
+  }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  @keyframes pop{
+    0%{ transform:scale(.6); opacity:0 }
+    60%{ transform:scale(1.05); opacity:1 }
+    100%{ transform:scale(1); opacity:1 }
+  }
+
+  /* ============ CELEBRATION MODAL ============ */
+  .celebrate{position:fixed; inset:0; background:rgba(20,17,15,.55);
+    z-index:2500; display:flex; align-items:center; justify-content:center; padding:24px;
+    animation:fadeIn .25s ease}
+  .celebrate-card{background:var(--paper); border-radius:20px; padding:40px 28px;
+    text-align:center; max-width:340px; width:100%;
+    animation:pop .5s cubic-bezier(.68,-0.55,.27,1.55);
+    box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .celebrate-emoji{font-size:72px; line-height:1; margin-bottom:12px}
+  .celebrate-title{font-family:Georgia,serif; font-size:26px; margin-bottom:8px; letter-spacing:-.02em}
+  .celebrate-text{color:var(--muted); font-size:15px; line-height:1.5}
+
+  /* ============ РЕАКЦИИ КУРАТОРА ============ */
+  .reactions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+  .reaction-btn{padding:8px 14px; border-radius:12px; border:1px solid var(--line);
+    background:var(--paper); font-size:22px; cursor:pointer; transition:.15s; line-height:1}
+  .reaction-btn:hover{border-color:var(--ink); transform:scale(1.05)}
+  .reaction-btn.active{background:var(--accent-soft); border-color:var(--accent); transform:scale(1.05)}
 
   .score-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .score-btn{min-width:46px;height:46px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
@@ -187,13 +259,13 @@
   .notif-banner .close-x{background:none;border:none;cursor:pointer;font-size:18px;color:#1A4D8F;opacity:.6;padding:4px 8px}
   .notif-banner .close-x:hover{opacity:1}
 
-  .lightbox{position:fixed;inset:0;background:rgba(20,17,15,.92);z-index:1000;
+  .lightbox{position:fixed;inset:0;background:rgba(20,17,15,.92);z-index:3000;
     display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
   .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
 
   #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);
     color:var(--cream);padding:12px 22px;border-radius:999px;font-size:14px;opacity:0;
-    pointer-events:none;transition:.3s;z-index:999;max-width:90%;text-align:center}
+    pointer-events:none;transition:.3s;z-index:900;max-width:90%;text-align:center}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 
   .checkin{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--paper);
@@ -207,6 +279,74 @@
   .heart:hover{background:var(--accent-soft)}
   .heart.active{color:#E63946}
 
+  /* ============ АВАТАР ============ */
+  .avatar-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+  .avatar-opt{font-size:32px;padding:12px 0;border:1px solid var(--line);border-radius:12px;
+    background:var(--paper);cursor:pointer;transition:.18s;line-height:1}
+  .avatar-opt:hover{border-color:var(--ink); transform:scale(1.05)}
+  .avatar-opt.active{background:var(--accent-soft); border-color:var(--accent)}
+
+  /* ============ СЕЗОННЫЕ ЭФФЕКТЫ ============ */
+  .season-particle {
+    position: fixed;
+    top: -60px;
+    pointer-events: none;
+    z-index: 2;
+    user-select: none;
+    animation: seasonFall linear forwards;
+    will-change: transform;
+  }
+  @keyframes seasonFall {
+    0%   { transform: translateY(0)     rotate(0deg)   translateX(0); }
+    25%  { transform: translateY(25vh)  rotate(90deg)  translateX(20px); }
+    50%  { transform: translateY(50vh)  rotate(180deg) translateX(-15px); }
+    75%  { transform: translateY(75vh)  rotate(270deg) translateX(15px); }
+    100% { transform: translateY(110vh) rotate(360deg) translateX(0); }
+  }
+
+  .season-banner {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+    background: rgba(20,17,15,.9);
+    color: var(--cream);
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 45;
+    max-width: 320px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    animation: seasonBannerIn .6s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .season-banner.hidden {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: .35s ease;
+  }
+  .season-banner .season-text { flex: 1; }
+  .season-banner .season-close {
+    background: none;
+    border: none;
+    color: var(--cream);
+    opacity: .55;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    font-family: inherit;
+    line-height: 1;
+  }
+  .season-banner .season-close:hover { opacity: 1; }
+  @keyframes seasonBannerIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   @media(max-width:700px){
     .row,.row-3{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr 1fr}
@@ -214,9 +354,18 @@
     .login-card{padding:30px 22px}
     .task-head{flex-direction:column;gap:10px}
     .photos{grid-template-columns:repeat(2,1fr)}
-    .streak-card{flex-direction:column; text-align:center; gap:10px}
-    .streak-status{margin:0; text-align:center}
+    .streak-top{flex-wrap:wrap}
+    .streak-status{margin:0; width:100%; text-align:left; margin-top:8px}
     .action-row .btn{min-width:100%}
+    .season-banner {
+      top: auto;
+      bottom: 76px;
+      right: 12px;
+      left: 12px;
+      max-width: none;
+      font-size: 12.5px;
+      padding: 9px 14px;
+    }
   }
 </style>
 </head>
@@ -229,7 +378,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 /* ============================================================
-   TELEGRAM — уведомления куратору
+   TELEGRAM
    ============================================================ */
 const TELEGRAM_TOKEN = '5104779882:AAHRUoojxHPGUlfkmb_57LY8jEZbFBFNAuQ';
 const TELEGRAM_CHAT  = '1178920700';
@@ -243,6 +392,194 @@ async function sendTelegram(text){
       body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text, parse_mode: 'HTML' })
     });
   } catch(e){ console.warn('Telegram не отправлен', e); }
+}
+
+/* ============================================================
+   МОТИВАШКИ ДНЯ
+   ============================================================ */
+const MOTIVATION_PHRASES = [
+  'Ещё одна работа — и ты ближе к сотке',
+  'Пять минут сегодня — сто баллов в июне',
+  'Ты уже сильнее, чем вчера',
+  'Маленькие шаги дают большие результаты',
+  'Сегодня ты выбираешь своё будущее',
+  'Один вопрос — один шаг к цели',
+  'Не идеально, но сделано — уже победа',
+  'Ты справишься. Я в тебя верю',
+  'Экзамен боится тех, кто готовится',
+  'Ещё чуть-чуть — и всё получится',
+  'Твоя старая работа уже не напрасна',
+  'Каждый день важнее, чем кажется',
+  'Сдай сегодня — и будешь благодарен себе в июне',
+  'Устал — отдохни, но не сдавайся',
+  'Прогресс не заметен, но он есть',
+  'Терпение — твой главный союзник',
+  'Ошибки — это ступени, а не провал',
+  'Ты не один, я рядом',
+  'Сегодня чуть-чуть, завтра — намного',
+  'Справишься, я точно знаю'
+];
+
+function getMotivationPhrase(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return MOTIVATION_PHRASES[dayOfYear % MOTIVATION_PHRASES.length];
+}
+
+/* ============================================================
+   УРОВНИ ОГОНЬКА
+   ============================================================ */
+function getLevel(streak){
+  if (streak >= 100) return { emoji:'💎', name:'Легенда', prev:100, next:null, lv:5 };
+  if (streak >= 30)  return { emoji:'👑', name:'Костёр',  prev:30,  next:100,  lv:4 };
+  if (streak >= 14)  return { emoji:'🏆', name:'Огонь',   prev:14,  next:30,   lv:3 };
+  if (streak >= 7)   return { emoji:'🔥🔥', name:'Пламя', prev:7,   next:14,   lv:2 };
+  if (streak >= 3)   return { emoji:'🔥', name:'Искра',   prev:3,   next:7,    lv:1 };
+  return { emoji:'·', name:'Разогрев', prev:0, next:3, lv:0 };
+}
+
+/* ============================================================
+   КОНФЕТТИ И ПОЗДРАВЛЕНИЯ
+   ============================================================ */
+function showConfetti(){
+  const colors = ['#C14E31','#E67E22','#F4D03F','#4A5340','#3A5A78','#E63946','#9B59B6'];
+  for (let i = 0; i < 70; i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay = (Math.random()*0.7).toFixed(2) + 's';
+    p.style.animationDuration = (2 + Math.random()*1.8).toFixed(2) + 's';
+    const size = 6 + Math.random()*8;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    if (Math.random() > 0.5) p.style.borderRadius = '50%';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 4500);
+  }
+}
+
+function showCelebration(emoji, title, text){
+  const div = document.createElement('div');
+  div.className = 'celebrate';
+  div.innerHTML = `
+    <div class="celebrate-card">
+      <div class="celebrate-emoji">${emoji}</div>
+      <div class="celebrate-title">${esc(title)}</div>
+      <div class="celebrate-text">${esc(text)}</div>
+      <button class="btn btn-primary" style="margin-top:22px;width:100%">Круто!</button>
+    </div>`;
+  const close = ()=>div.remove();
+  div.querySelector('button').addEventListener('click', close);
+  div.addEventListener('click', (e)=>{ if (e.target === div) close(); });
+  document.body.appendChild(div);
+  showConfetti();
+}
+
+/* ============================================================
+   СЕЗОННЫЕ ЭФФЕКТЫ
+   ============================================================ */
+function getSeason(){
+  const d = new Date();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+
+  if (m === 10 && day >= 25) return 'halloween';
+  if ((m === 12 && day >= 20) || (m === 1 && day <= 10)) return 'newyear';
+  if (m >= 3 && m <= 5) return 'spring';
+  if (m >= 6 && m <= 8) return 'summer';
+  if (m >= 9 && m <= 11) return 'autumn';
+  return 'winter';
+}
+
+const SEASON_CONFIG = {
+  halloween: {
+    emojis: ['🎃','👻','🦇','🕷️','🍬','🕸️'],
+    text: '🎃 Хэллоуин на носу — не бойся ЕГЭ, он не страшнее тыквы',
+    interval: 1800,
+    duration: [9, 14],
+    size: [20, 32],
+    opacity: 0.85
+  },
+  newyear: {
+    emojis: ['❄️','⛄','🎄','🎁','✨','⭐','🔔'],
+    text: '🎄 Скоро Новый год — успей закрыть работы до праздников!',
+    interval: 1200,
+    duration: [10, 18],
+    size: [18, 30],
+    opacity: 0.9
+  },
+  winter: {
+    emojis: ['❄️','❅','❆','✻','🌨️'],
+    text: '❄️ Зима — тихое время для подготовки. Всё получится!',
+    interval: 1600,
+    duration: [11, 19],
+    size: [14, 26],
+    opacity: 0.7
+  },
+  spring: {
+    emojis: ['🌸','🌷','🌺','🍀','🌿','🦋'],
+    text: '🌸 Весна — время обновления и новых побед',
+    interval: 2200,
+    duration: [9, 15],
+    size: [16, 26],
+    opacity: 0.75
+  },
+  summer: {
+    emojis: ['☀️','✨','🌻','🌊','🍉','🦋'],
+    text: '☀️ Лето. ЕГЭ близко, но ты справишься!',
+    interval: 2600,
+    duration: [8, 14],
+    size: [16, 26],
+    opacity: 0.65
+  },
+  autumn: {
+    emojis: ['🍂','🍁','🌰','🍃','🍄'],
+    text: '🍁 Осень — время собирать знания',
+    interval: 1700,
+    duration: [10, 16],
+    size: [16, 28],
+    opacity: 0.8
+  }
+};
+
+function startSeasonalEffects(){
+  const season = getSeason();
+  const cfg = SEASON_CONFIG[season];
+  if (!cfg) return;
+
+  const bannerKey = 'seasonBanner_' + season;
+  if (sessionStorage.getItem(bannerKey) !== '1'){
+    const banner = document.createElement('div');
+    banner.className = 'season-banner';
+    banner.innerHTML = `<span class="season-text">${cfg.text}</span>
+      <button class="season-close" aria-label="Скрыть">✕</button>`;
+    document.body.appendChild(banner);
+    banner.querySelector('.season-close').addEventListener('click', ()=>{
+      banner.classList.add('hidden');
+      sessionStorage.setItem(bannerKey, '1');
+      setTimeout(()=>banner.remove(), 400);
+    });
+  }
+
+  const spawn = ()=>{
+    const p = document.createElement('div');
+    p.className = 'season-particle';
+    const emoji = cfg.emojis[Math.floor(Math.random()*cfg.emojis.length)];
+    const size = cfg.size[0] + Math.random()*(cfg.size[1]-cfg.size[0]);
+    const dur  = cfg.duration[0] + Math.random()*(cfg.duration[1]-cfg.duration[0]);
+    p.textContent = emoji;
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.fontSize = size + 'px';
+    p.style.animationDuration = dur + 's';
+    p.style.opacity = cfg.opacity;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), dur*1000 + 300);
+  };
+
+  for (let i = 0; i < 8; i++) setTimeout(spawn, i * 220);
+  setInterval(spawn, cfg.interval);
 }
 
 /* ============================================================
@@ -275,12 +612,12 @@ const blank = () => ({ curatorPin:'1234', students:[], tasks:[], subs:[], freesu
 let state = blank();
 let session = null;
 let ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
-           filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
+           filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false,
+           checkReaction: null };
 
-let lastPendingCount = -1;
+const celebratedNow = new Set();
 let notifBannerDismissed = localStorage.getItem('tezis.notifBanner') === 'dismissed';
 
-/* Telegram-напоминание раз в 2 часа */
 const TG_REMINDER_INTERVAL = 2 * 60 * 60 * 1000;
 let tgLastReminder = 0;
 setInterval(() => {
@@ -388,23 +725,38 @@ function askNotifications(){
   if (typeof Notification === 'undefined') { toast('Браузер не поддерживает уведомления'); return; }
   if (Notification.permission === 'granted') { toast('Уведомления уже включены 👍'); return; }
   Notification.requestPermission().then(p => {
-    if (p === 'granted') { toast('Уведомления включены 🔔'); }
-    else { toast('Уведомления не разрешены'); }
+    if (p === 'granted') toast('Уведомления включены 🔔');
+    else toast('Уведомления не разрешены');
     render();
   });
-}
-
-function showNotif(title, body, tag){
-  if (!canNotify()) return;
-  try {
-    const n = new Notification(title, { body, tag: tag || 'tezis' });
-    n.onclick = () => { window.focus(); n.close(); };
-  } catch(e){ console.warn('Не удалось показать уведомление', e); }
 }
 
 function countPending(){
   return state.subs.filter(s=>s.score==null).length
        + state.freesubs.filter(s=>s.score==null).length;
+}
+
+function checkMilestones(studentId){
+  const st = state.students.find(s=>s.id===studentId);
+  if (!st) return;
+  st.milestones = st.milestones || {};
+  const total = state.subs.filter(s=>s.studentId===studentId).length
+              + state.freesubs.filter(s=>s.studentId===studentId).length;
+  const streak = calcStreak(studentId);
+
+  if (!st.milestones.firstSub && total === 1){
+    st.milestones.firstSub = true;
+    setTimeout(()=>showCelebration('🚀','Первый шаг!','Ты сдал первую работу. Так держать!'), 500);
+  } else if (!st.milestones.sub10 && total === 10){
+    st.milestones.sub10 = true;
+    setTimeout(()=>showCelebration('🏅','Юбилейная!','10 работ позади. Это уже серьёзно.'), 500);
+  } else if (!st.milestones.streak7 && streak >= 7){
+    st.milestones.streak7 = true;
+    setTimeout(()=>showCelebration('💪','Неделя подряд!','7 дней без пропусков. Ты — молодец.'), 500);
+  } else if (!st.milestones.streak30 && streak >= 30){
+    st.milestones.streak30 = true;
+    setTimeout(()=>showCelebration('👑','Месяц подряд!','30 дней. Ты в топе.'), 500);
+  }
 }
 
 /* ============================================================
@@ -452,6 +804,26 @@ function render(){
   const me = state.students.find(s=>s.id===session.id);
   if (!me){ session=null; localStorage.removeItem(LS_SES); app.innerHTML = viewLogin(); return; }
   app.innerHTML = viewStudent(me);
+  autoCelebrateForStudent(me);
+}
+
+function autoCelebrateForStudent(me){
+  if (ui.openTask || ui.newFree || ui.newCheckin || ui.showProgress) return;
+  const all = [
+    ...state.subs.filter(s=>s.studentId===me.id).map(s=>({...s, kind:'task'})),
+    ...state.freesubs.filter(s=>s.studentId===me.id).map(s=>({...s, kind:'free'}))
+  ].filter(s=>s.score!=null);
+  const recent = all.filter(s=>{
+    const t = new Date(s.checkedAt||s.at).getTime();
+    return Date.now() - t < 24*3600*1000 && Number(s.score) >= 5;
+  }).sort((a,b)=>(b.checkedAt||b.at).localeCompare(a.checkedAt||a.at));
+  if (recent.length){
+    const key = recent[0].id;
+    if (!celebratedNow.has(key)){
+      celebratedNow.add(key);
+      setTimeout(()=>{ showConfetti(); }, 400);
+    }
+  }
 }
 
 /* ============================================================
@@ -480,7 +852,7 @@ function loginStudentHTML(){
   if (!state.students.length) return `<div class="hint">Куратор пока не добавил учеников.</div>`;
   return `
   <div class="field"><label class="label">Кто ты</label>
-    <select class="select" id="sid">${state.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
+    <select class="select" id="sid">${state.students.map(s=>`<option value="${s.id}">${s.avatar||''} ${esc(s.name)}</option>`).join('')}</select></div>
   <div class="field"><label class="label">PIN</label>
     <input class="input" id="spin" type="password" inputmode="numeric" placeholder="••••"></div>
   <button class="btn btn-primary" style="width:100%" data-act="login-student">Войти</button>`;
@@ -506,9 +878,7 @@ function viewCurator(){
   const bannerHTML = showBanner ? `
     <div class="notif-banner">
       <div class="notif-banner-icon">🔔</div>
-      <div class="notif-banner-text">
-        <b>Уведомления в Telegram</b> работают. Дополнительно можно включить уведомления браузера.
-      </div>
+      <div class="notif-banner-text"><b>Уведомления браузера</b> — можно включить дополнительно.</div>
       <button class="btn" data-act="ask-notif">Включить</button>
       <button class="close-x" data-act="dismiss-notif-banner" title="Скрыть">✕</button>
     </div>` : '';
@@ -516,9 +886,7 @@ function viewCurator(){
   return `<div class="topbar"><div class="topbar-inner">
     <div class="logo">Т<span>Е</span>ЗИС${pending?`<span class="logo-badge">${pending}</span>`:''}</div>
     <div class="who">
-      <button class="notif-btn ${notifOn?'on':'off'}" data-act="ask-notif" title="${notifOn?'Уведомления включены':'Включить уведомления'}">
-        ${notifOn ? '🔔' : '🔕'}
-      </button>
+      <button class="notif-btn ${notifOn?'on':'off'}" data-act="ask-notif" title="${notifOn?'Уведомления включены':'Включить'}">${notifOn ? '🔔' : '🔕'}</button>
       <span>Куратор</span>
       <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button>
     </div>
@@ -556,11 +924,17 @@ function studentCard(s){
   const all  = [...subs, ...fs].filter(x=>x.score!=null);
   const avg  = all.length ? (all.reduce((a,b)=>a+Number(b.score),0)/all.length).toFixed(1) : '—';
   const streak = calcStreak(s.id);
+  const lvl = getLevel(streak);
+  const avatar = s.avatar || '🦊';
   return `<div class="task" style="cursor:default"><div class="task-head">
-    <div><h3 class="h3">${esc(s.name)}</h3>
-      <div class="meta">PIN: <b>${esc(s.pin)}</b> · заданий ${tasks.length} ·
-        сдано ${subs.length+fs.length} · проверено ${all.length} · средний ${avg}</div>
-      ${streak ? `<div class="meta" style="margin-top:4px">🔥 Серия: <b>${streak}</b> ${pluralDays(streak)}</div>` : ''}
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div class="avatar-small" style="font-size:22px;width:44px;height:44px">${avatar}</div>
+      <div>
+        <h3 class="h3">${esc(s.name)}</h3>
+        <div class="meta">PIN: <b>${esc(s.pin)}</b> · заданий ${tasks.length} ·
+          сдано ${subs.length+fs.length} · проверено ${all.length} · средний ${avg}</div>
+        ${streak ? `<div class="meta" style="margin-top:4px">${lvl.emoji} <b>${streak}</b> ${pluralDays(streak)} · ${lvl.name}</div>` : ''}
+      </div>
     </div>
     <button class="btn btn-danger" data-act="del-student" data-id="${s.id}">Удалить</button>
   </div></div>`;
@@ -643,13 +1017,12 @@ function tabCheck(){
 
   const pendingCount = countPending();
   const urgentCount = [...state.subs, ...state.freesubs].filter(isUrgent).length;
-
   const pill = (k,l) => `<button class="pill ${ui.filter===k?'active':''}" data-act="set-filter" data-filter="${k}">${l}</button>`;
   const urgentBanner = (ui.filter !== 'done' && urgentCount > 0) ? `
     <div class="notif-banner" style="background:linear-gradient(135deg,#FFF1EE 0%,#FCE0D9 100%);border-color:#F0B8AA">
       <div class="notif-banner-icon">🚨</div>
       <div class="notif-banner-text" style="color:#8B2C1A">
-        <b>${urgentCount}</b> ${urgentCount===1?'работа ждёт':'работ ждут'} проверки больше 2 дней — они сверху списка.
+        <b>${urgentCount}</b> ${urgentCount===1?'работа ждёт':'работ ждут'} проверки больше 2 дней — они сверху.
       </div>
     </div>` : '';
 
@@ -673,6 +1046,7 @@ function subCard(s){
   }
   const st = state.students.find(x=>x.id===s.studentId);
   const urgent = isUrgent(s);
+  const avatar = st?.avatar || '🦊';
   return `<div class="task ${urgent?'urgent':''}" data-act="open-check" data-id="${id}" data-kind="${s.kind}">
     <div class="task-head">
       <div style="min-width:0">
@@ -684,7 +1058,7 @@ function subCard(s){
           <span class="badge neutral">${esc(kind)}</span>
         </div>
         <h3 class="h3">${esc(topic)}</h3>
-        <div class="meta">${esc(st?st.name:'—')} · ${fmtRel(s.at)}${photos.length?` · 📎 ${photos.length}`:''}</div>
+        <div class="meta">${avatar} ${esc(st?st.name:'—')} · ${fmtRel(s.at)}${photos.length?` · 📎 ${photos.length}`:''}</div>
       </div>
       <div class="score">${s.score!=null?`${s.score} / ${max}`:'—'}</div>
     </div>
@@ -701,6 +1075,8 @@ const COMMENT_TEMPLATES = [
   'Отличные примеры 👍',
   'Нужно раскрыть тему глубже'
 ];
+
+const REACTION_OPTIONS = ['🔥','💪','👏','🎉','✨'];
 
 function viewCheckDetail(){
   const sId = ui.openCheck, kind = ui.openFree;
@@ -728,6 +1104,11 @@ function viewCheckDetail(){
   }
   const tplHTML = COMMENT_TEMPLATES.map(t =>
     `<button class="tpl" data-act="use-tpl" data-tpl="${esc(t)}">${esc(t)}</button>`).join('');
+
+  const currentReaction = ui.checkReaction !== null ? ui.checkReaction : (s.reaction || '');
+  const reactHTML = REACTION_OPTIONS.map(e =>
+    `<button class="reaction-btn ${currentReaction===e?'active':''}" data-act="set-reaction" data-emoji="${e}">${e}</button>`
+  ).join('');
 
   const allPending = [
     ...state.subs.filter(x=>x.score==null).map(x=>({id:x.id, kind:'task', at:x.at})),
@@ -759,6 +1140,12 @@ function viewCheckDetail(){
       <div class="score-buttons">${scoreBtns}</div>
       <input class="input" id="cScore" type="number" min="0" max="${max}" value="${s.score??''}" placeholder="или введи вручную" style="max-width:200px">
     </div>
+
+    <div class="field">
+      <label class="label">Реакция для ученика</label>
+      <div class="reactions">${reactHTML}</div>
+    </div>
+
     <div class="field">
       <label class="label">Комментарий ученику</label>
       <div class="templates">${tplHTML}</div>
@@ -781,11 +1168,13 @@ function tabActivity(){
     ${state.students.length ? state.students.map(s=>{
       const streak = calcStreak(s.id);
       const today = activeToday(s.id);
+      const lvl = getLevel(streak);
+      const avatar = s.avatar || '🦊';
       return `<div class="meta" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)">
-        <span><b>${esc(s.name)}</b></span>
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${avatar}</span><b>${esc(s.name)}</b></span>
         <span style="display:flex;gap:14px;align-items:center">
           ${today ? '<span style="color:var(--ok);font-size:12px">✓ сегодня</span>' : '<span style="color:var(--muted);font-size:12px">ещё не занимался</span>'}
-          <span style="font-family:Georgia,serif;font-size:18px">${streak ? '🔥 '+streak : '—'}</span>
+          <span style="font-family:Georgia,serif;font-size:16px">${streak ? lvl.emoji+' '+streak+' · '+lvl.name : '—'}</span>
         </span>
       </div>`;
     }).join('') : '<div class="meta">Пока нет учеников.</div>'}
@@ -802,11 +1191,12 @@ function tabActivity(){
 function checkinCardCurator(c){
   const st = state.students.find(s=>s.id===c.studentId);
   const liked = !!c.likedByCurator;
+  const avatar = st?.avatar || '🦊';
   return `<div class="checkin">
     <div class="checkin-emoji">${c.kind==='submission' ? '📝' : '📚'}</div>
     <div class="checkin-body">
       <div class="checkin-text">${esc(c.text)||'<span class="muted">— без текста —</span>'}</div>
-      <div class="checkin-meta">${esc(st?st.name:'—')} · ${fmtFull(c.at)}</div>
+      <div class="checkin-meta">${avatar} ${esc(st?st.name:'—')} · ${fmtFull(c.at)}</div>
     </div>
     <button class="heart ${liked?'active':''}" data-act="like-checkin" data-id="${c.id}" title="Заметить">${liked?'❤️':'🤍'}</button>
   </div>`;
@@ -817,8 +1207,8 @@ function tabSettings(){
   return `<div class="card" style="margin-bottom:18px">
     <h2 class="h2">📱 Уведомления в Telegram</h2>
     <p class="meta" style="margin-bottom:14px">
-      Уведомления настроены и работают. При каждой сдаче работы тебе придёт сообщение в бот
-      <b>@Lucciola25_bot</b>. А раз в 2 часа — напоминание, если что-то ждёт проверки.
+      Уведомления работают. При каждой сдаче приходит сообщение в <b>@Lucciola25_bot</b>.
+      Раз в 2 часа — напоминание, если что-то ждёт проверки.
     </p>
     <button class="btn btn-primary" data-act="test-tg">Проверить Telegram</button>
   </div>
@@ -826,7 +1216,7 @@ function tabSettings(){
   <div class="card" style="margin-bottom:18px">
     <h2 class="h2">🔔 Уведомления браузера</h2>
     <p class="meta" style="margin-bottom:14px">
-      ${notifOn ? 'Включены. Приходят, пока вкладка открыта.' : 'Дополнительный канал — если хочешь видеть пуши прямо в браузере.'}
+      ${notifOn ? 'Включены.' : 'Дополнительный канал — пуши прямо в браузере.'}
     </p>
     ${notifOn
       ? `<button class="btn btn-ghost" data-act="test-notif">Проверить уведомление</button>`
@@ -842,7 +1232,6 @@ function tabSettings(){
 
   <div class="card" style="margin-bottom:18px">
     <h2 class="h2">Резервная копия</h2>
-    <p class="meta" style="margin-bottom:16px">Выгрузи все данные в файл или загрузи обратно.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-ghost" data-act="export">Скачать JSON</button>
       <button class="btn btn-ghost" data-act="import">Загрузить JSON</button>
@@ -852,7 +1241,7 @@ function tabSettings(){
   <div class="card">
     <h2 class="h2">Режим работы</h2>
     <p class="meta" style="margin-bottom:14px">${CLOUD
-      ? '☁ <b>Облако.</b> Данные синхронизируются между устройствами.'
+      ? '☁ <b>Облако.</b> Данные синхронизируются.'
       : '💾 <b>Локально.</b> Данные только в этом браузере.'}</p>
     <button class="btn btn-danger" data-act="reset" style="border:1px solid var(--line)">Стереть все данные</button>
   </div>`;
@@ -862,10 +1251,14 @@ function tabSettings(){
    8. УЧЕНИК
    ============================================================ */
 function studentTopbar(me){
+  const avatar = me.avatar || '🦊';
   return `<div class="topbar"><div class="topbar-inner">
     <div class="logo">Т<span>Е</span>ЗИС</div>
-    <div class="who"><span>${esc(me.name)}</span>
-    <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button></div>
+    <div class="who">
+      <button class="avatar-btn" data-act="open-avatar" title="Сменить аватар">${avatar}</button>
+      <span>${esc(me.name)}</span>
+      <button class="btn btn-ghost btn-sm" data-act="logout">Выйти</button>
+    </div>
   </div></div>`;
 }
 
@@ -885,24 +1278,44 @@ function viewStudent(me){
 
   const streak = calcStreak(me.id);
   const today = activeToday(me.id);
+  const lvl = getLevel(streak);
+  const phrase = getMotivationPhrase();
+
+  let progressHTML = '';
+  if (lvl.next){
+    const span = lvl.next - lvl.prev;
+    const done = streak - lvl.prev;
+    const pct = Math.min(100, Math.round((done/span)*100));
+    progressHTML = `
+      <div class="level-bar"><div class="level-bar-fill" style="width:${pct}%"></div></div>
+      <div class="level-bar-text">До следующего уровня: ${lvl.next - streak} ${pluralDays(lvl.next - streak)}</div>`;
+  } else {
+    progressHTML = `<div class="level-bar-text" style="margin-top:12px">Максимальный уровень достигнут 💎</div>`;
+  }
 
   const myCheckins = (state.checkins||[]).filter(c=>c.studentId===me.id)
     .sort((a,b)=>(b.at||'').localeCompare(a.at||'')).slice(0, 8);
 
   return `${studentTopbar(me)}<div class="container"><div class="page">
 
-    <div class="streak-card">
-      <div class="streak-emoji">🔥</div>
-      <div>
-        <div class="streak-num">${streak}</div>
-        <div class="streak-label">${pluralDays(streak)} подряд</div>
+    <div class="streak-card lv-${lvl.lv}">
+      <div class="streak-top">
+        <div class="streak-emoji">${lvl.emoji}</div>
+        <div>
+          <div class="streak-num">${streak}</div>
+          <div class="streak-label">${pluralDays(streak)} подряд</div>
+          <div class="streak-level-name">${lvl.name}</div>
+        </div>
+        <div class="streak-status">
+          ${today
+            ? `<div class="today">✓ Сегодня уже занимался</div>`
+            : `<button class="btn btn-primary btn-sm" data-act="open-checkin">Отметиться 🔥</button>`}
+        </div>
       </div>
-      <div class="streak-status">
-        ${today
-          ? `<div class="today">✓ Сегодня уже занимался</div>`
-          : `<button class="btn btn-primary btn-sm" data-act="open-checkin">Отметиться сегодня</button>`}
-      </div>
+      ${progressHTML}
     </div>
+
+    <div class="motivation-card">${esc(phrase)}</div>
 
     <div class="stats">
       <div class="stat"><div class="n">${tasks.length}</div><div class="l">Заданий</div></div>
@@ -911,13 +1324,8 @@ function viewStudent(me){
       <div class="stat"><div class="n">${avg}</div><div class="l">Средний балл</div></div>
     </div>
 
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-progress">
-      📊 Мой прогресс
-    </button>
-
-    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-free">
-      ✎ Прислать работу куратору
-    </button>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-progress">📊 Мой прогресс</button>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:12px" data-act="open-free">✎ Прислать работу куратору</button>
 
     <h2 class="h2" style="margin-top:20px">Мои задания</h2>
     ${tasks.length ? tasks.map(a=>studentTaskCard(a,me)).join('')
@@ -947,9 +1355,10 @@ function freeStudentCard(f){
   const badge = f.score!=null
     ? `<span class="badge ok">Проверено · ${f.score}/${f.max||6}</span>`
     : `<span class="badge blue">На проверке</span>`;
+  const reaction = f.reaction ? `<span style="font-size:20px;margin-left:6px">${f.reaction}</span>` : '';
   return `<div class="task" data-act="open-myfree" data-id="${f.id}">
     <div class="task-head"><div>
-      <div class="badges">${badge}</div>
+      <div class="badges">${badge}${reaction}</div>
       <h3 class="h3">${esc(f.topic||'Свободная работа')}</h3>
       <div class="meta">${fmtFull(f.at)}</div>
     </div></div>
@@ -965,9 +1374,10 @@ function studentTaskCard(a, me){
       : `<span class="badge neutral">Новое</span>`;
   } else if (sub.score==null) badge = `<span class="badge blue">На проверке</span>`;
   else badge = `<span class="badge ok">Проверено · ${sub.score}/${a.max||3}</span>`;
+  const reaction = sub?.reaction ? `<span style="font-size:20px;margin-left:6px">${sub.reaction}</span>` : '';
   return `<div class="task" data-act="open-task" data-id="${a.id}">
     <div class="task-head"><div style="min-width:0">
-      <div class="badges">${badge}
+      <div class="badges">${badge}${reaction}
         ${a.no?`<span class="badge neutral">№ ${esc(a.no)}</span>`:''}
         ${a.due?`<span class="badge blue">до ${fmt(a.due)}</span>`:''}
       </div>
@@ -1007,6 +1417,7 @@ function viewStudentTask(me){
         ${photosHTML}
         <div class="notice">Отправлено ${fmtFull(sub.at)}. Ждёт проверки куратора.</div>`;
     } else {
+      const reactionBig = sub.reaction ? `<div class="result-reaction">${sub.reaction}</div>` : '';
       body = `<div class="block-label">Твой ответ</div>
         <div class="answer">${esc(sub.text)||'<span class="muted">— без текста —</span>'}</div>
         ${sub.link?`<a class="link" href="${esc(sub.link)}" target="_blank" rel="noopener">Ссылка →</a>`:''}
@@ -1014,6 +1425,7 @@ function viewStudentTask(me){
         <div class="result">
           <div class="result-score">${sub.score}<span> / ${a.max||3}</span></div>
           <div class="result-label">балл от куратора</div>
+          ${reactionBig}
         </div>
         ${sub.feedback?`<div class="block-label">Комментарий куратора</div>
           <div class="answer">${esc(sub.feedback)}</div>`:''}`;
@@ -1044,10 +1456,8 @@ function viewStudentFreeForm(me){
     <div class="card" style="margin-top:16px">
       <h1 class="display h1" style="margin-bottom:6px">Прислать работу</h1>
       <p class="meta" style="margin-bottom:20px">Отправь работу, чтобы куратор её проверил.</p>
-
       <div class="field"><label class="label">Тема / что за работа</label>
         <input class="input" id="fTopic" placeholder="Например: Эссе по теме «Свобода и ответственность»"></div>
-
       <div class="field"><label class="label">Тип работы</label>
         <select class="select" id="fType">
           <option>Эссе (задание 25)</option>
@@ -1055,23 +1465,18 @@ function viewStudentFreeForm(me){
           <option>Развёрнутый ответ</option>
           <option>Другое</option>
         </select></div>
-
       <div class="field"><label class="label">Максимальный балл</label>
         <input class="input" id="fMax" type="number" min="1" value="6"></div>
-
       <div class="field"><label class="label">Текст работы</label>
         <textarea class="textarea" id="fText" placeholder="Напиши ответ здесь..."></textarea></div>
-
       <div class="field"><label class="label">Ссылка (если работа в другом месте)</label>
         <input class="input" id="fLink" placeholder="https://..."></div>
-
       <div class="block-label">Фото работы (до 3 штук)</div>
       <div class="photo-preview" id="photoPrev"></div>
       <label class="file-btn" style="margin-top:8px">
         📷 Добавить фото
         <input type="file" accept="image/*" multiple hidden id="fFile">
       </label>
-
       <button class="btn btn-primary" style="margin-top:20px" data-act="submit-free">Отправить куратору</button>
     </div>
   </div></div>`;
@@ -1082,7 +1487,7 @@ function viewCheckinForm(me){
     <button class="btn btn-ghost btn-sm" data-act="close-checkin">← Назад</button>
     <div class="card" style="margin-top:16px">
       <h1 class="display h1" style="margin-bottom:6px">🔥 Отметиться</h1>
-      <p class="meta" style="margin-bottom:20px">Расскажи коротко, что выучил или повторил сегодня.</p>
+      <p class="meta" style="margin-bottom:20px">Что выучил или повторил сегодня?</p>
       <div class="field"><label class="label">Что сделал сегодня?</label>
         <textarea class="textarea" id="chText" placeholder="Например: Повторил тему «Социальная стратификация»" style="min-height:100px"></textarea></div>
       <button class="btn btn-primary" style="width:100%" data-act="submit-checkin">Отметиться 🔥</button>
@@ -1096,6 +1501,7 @@ function viewStudentMyFree(me){
   const photosHTML = (f.images||[]).length ? `<div class="photos">
     ${f.images.map(img=>`<img src="${img}" data-act="zoom" data-img-src="${img}">`).join('')}
   </div>` : '';
+  const reactionBig = f.reaction ? `<div class="result-reaction">${f.reaction}</div>` : '';
   return `${studentTopbar(me)}<div class="container"><div class="page">
     <button class="btn btn-ghost btn-sm" data-act="back">← Назад</button>
     <div class="card" style="margin-top:16px">
@@ -1111,6 +1517,7 @@ function viewStudentMyFree(me){
         <div class="result">
           <div class="result-score">${f.score}<span> / ${f.max||6}</span></div>
           <div class="result-label">балл от куратора</div>
+          ${reactionBig}
         </div>
         ${f.feedback?`<div class="block-label">Комментарий</div>
           <div class="answer">${esc(f.feedback)}</div>`:''}`:''}
@@ -1131,6 +1538,7 @@ function viewStudentProgress(me){
 
   const avg = checked.length ? checked.reduce((a,b)=>a+Number(b.score),0)/checked.length : 0;
   const streak = calcStreak(me.id);
+  const lvl = getLevel(streak);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const activity = [];
@@ -1195,7 +1603,7 @@ function viewStudentProgress(me){
 
     <div class="stats" style="grid-template-columns:repeat(3,1fr)">
       <div class="stat"><div class="n">${avg.toFixed(1)}</div><div class="l">Средний балл</div></div>
-      <div class="stat"><div class="n">${streak}🔥</div><div class="l">${pluralDays(streak)} подряд</div></div>
+      <div class="stat"><div class="n">${streak}${lvl.emoji}</div><div class="l">${lvl.name}</div></div>
       <div class="stat"><div class="n">${checked.length}/${all.length}</div><div class="l">Проверено / сдано</div></div>
     </div>
 
@@ -1225,8 +1633,7 @@ function doLoginCurator(){
   if (pin !== String(state.curatorPin)) return toast('Неверный PIN');
   session = { role:'curator' };
   localStorage.setItem(LS_SES, JSON.stringify(session));
-  ui.tab = 'students';
-  render();
+  ui.tab = 'students'; render();
 }
 function doLoginStudent(){
   const sid = $('sid')?.value;
@@ -1242,7 +1649,9 @@ function addStudent(){
   const name = $('nName').value.trim();
   if (!name) return toast('Введи имя');
   let pin = $('nPin').value.trim() || String(Math.floor(1000+Math.random()*9000));
-  state.students.push({ id:uid(), name, pin });
+  const EMOJIS = ['🦊','🐼','🦁','🌸','⚡','🌙','🐨','🦉','🐧','🦄','🐯','🍀','⭐','🔥','🎯','🌊'];
+  const avatar = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  state.students.push({ id:uid(), name, pin, avatar });
   save();
 }
 function delStudent(id){
@@ -1297,14 +1706,15 @@ function submitWork(taskId){
 
   if (!ex && a) addSubmissionCheckin(sid, a.topic||'Задание', 'task', a.type);
 
-  // Telegram-уведомление
   const me = state.students.find(s=>s.id===sid);
   const taskLabel = a?.topic || 'задание';
   const taskType = a?.type ? ` (${a.type})` : '';
   sendTelegram(`📝 <b>Новая работа</b>\n${me?.name || 'Ученик'} — ${taskLabel}${taskType}`);
 
   ui.openTask = null; ui.tempPhotos = [];
-  save(); toast('Работа отправлена 🔥');
+  save();
+  toast('Работа отправлена 🔥');
+  checkMilestones(sid);
 }
 function submitFree(){
   const topic = $('fTopic').value.trim();
@@ -1322,12 +1732,13 @@ function submitFree(){
   });
   addSubmissionCheckin(session.id, topic, 'free', type);
 
-  // Telegram-уведомление
   const me = state.students.find(s=>s.id===session.id);
   sendTelegram(`📝 <b>Свободная работа</b>\n${me?.name || 'Ученик'} — ${topic} (${type})`);
 
   ui.newFree = false; ui.tempPhotos = [];
-  save(); toast('Работа отправлена 🔥');
+  save();
+  toast('Работа отправлена 🔥');
+  checkMilestones(session.id);
 }
 
 function submitCheckin(){
@@ -1362,6 +1773,11 @@ function saveCheck(id, kind, next){
   s.feedback = $('cFb').value.trim();
   s.checkedAt = new Date().toISOString();
 
+  if (ui.checkReaction !== null && ui.checkReaction !== undefined){
+    s.reaction = ui.checkReaction || null;
+  }
+  ui.checkReaction = null;
+
   if (next){
     const allPending = [
       ...state.subs.filter(x=>x.score==null && x.id !== id).map(x=>({id:x.id, kind:'task', at:x.at})),
@@ -1375,6 +1791,7 @@ function saveCheck(id, kind, next){
     if (allPending.length){
       ui.openCheck = allPending[0].id;
       ui.openFree = allPending[0].kind;
+      ui.checkReaction = null;
       save();
       toast('Сохранено, следующая →');
       return;
@@ -1398,6 +1815,32 @@ function exportJSON(){
 function resetAll(){
   if (!confirm('Стереть ВСЕ данные?')) return;
   state = blank(); save(); toast('Данные стёрты');
+}
+
+function openAvatarPicker(){
+  const me = state.students.find(s=>s.id===session.id);
+  if (!me) return;
+  const EMOJIS = ['🦊','🐼','🦁','🌸','⚡','🌙','🐨','🦉','🐧','🦄','🐯','🍀','⭐','🔥','🎯','🌊'];
+  const div = document.createElement('div');
+  div.className = 'celebrate';
+  div.innerHTML = `
+    <div class="celebrate-card" style="max-width:380px">
+      <div class="celebrate-title" style="font-size:22px;margin-bottom:16px">Выбери аватар</div>
+      <div class="avatar-picker">
+        ${EMOJIS.map(e=>`<button class="avatar-opt ${me.avatar===e?'active':''}" data-emoji="${e}">${e}</button>`).join('')}
+      </div>
+      <button class="btn btn-ghost" style="margin-top:16px;width:100%" data-cancel="1">Закрыть</button>
+    </div>`;
+  div.addEventListener('click', (e)=>{
+    const b = e.target.closest('.avatar-opt');
+    if (b){
+      me.avatar = b.dataset.emoji;
+      save(); div.remove(); render();
+      return;
+    }
+    if (e.target === div || e.target.closest('[data-cancel]')) div.remove();
+  });
+  document.body.appendChild(div);
 }
 
 /* ============================================================
@@ -1442,9 +1885,8 @@ document.addEventListener('click', e => {
     case 'logout':
       session = null; localStorage.removeItem(LS_SES);
       ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
-             filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
-      updateTitle();
-      render(); break;
+             filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false, checkReaction:null };
+      updateTitle(); render(); break;
     case 'tab': ui.tab = el.dataset.tab; ui.openCheck=null; render(); break;
     case 'set-filter': ui.filter = el.dataset.filter; render(); break;
     case 'add-student': addStudent(); break;
@@ -1452,8 +1894,8 @@ document.addEventListener('click', e => {
     case 'add-task': addTask(); break;
     case 'del-task': delTask(id); break;
     case 'open-task': ui.openTask = id; ui.tempPhotos = []; render(); break;
-    case 'open-check': ui.openCheck = id; ui.openFree = kind; render(); break;
-    case 'back': ui.openTask = null; ui.openCheck = null; ui.tempPhotos = []; render(); break;
+    case 'open-check': ui.openCheck = id; ui.openFree = kind; ui.checkReaction = null; render(); break;
+    case 'back': ui.openTask = null; ui.openCheck = null; ui.tempPhotos = []; ui.checkReaction = null; render(); break;
     case 'submit-work': submitWork(id); break;
     case 'save-check': saveCheck(id, kind, el.dataset.next==='1'); break;
     case 'save-pin': savePin(); break;
@@ -1467,6 +1909,7 @@ document.addEventListener('click', e => {
     case 'open-myfree': ui.openTask = id; renderStudentMyFree(); break;
     case 'open-progress': ui.showProgress = true; render(); break;
     case 'close-progress': ui.showProgress = false; render(); break;
+    case 'open-avatar': openAvatarPicker(); break;
 
     case 'open-checkin': ui.newCheckin = true; render(); break;
     case 'close-checkin': ui.newCheckin = false; render(); break;
@@ -1486,6 +1929,14 @@ document.addEventListener('click', e => {
       el.classList.add('active');
       break;
     }
+    case 'set-reaction': {
+      const emoji = el.dataset.emoji;
+      if (ui.checkReaction === emoji){ ui.checkReaction = null; }
+      else { ui.checkReaction = emoji; }
+      document.querySelectorAll('.reaction-btn').forEach(b=>b.classList.remove('active'));
+      if (ui.checkReaction) el.classList.add('active');
+      break;
+    }
     case 'use-tpl': {
       const ta = $('cFb');
       if (ta){
@@ -1496,7 +1947,9 @@ document.addEventListener('click', e => {
     }
     case 'ask-notif': askNotifications(); break;
     case 'test-notif':
-      showNotif('ТЕЗИС', 'Тестовое уведомление. Всё работает 👍', 'test');
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+        new Notification('ТЕЗИС', { body: 'Тестовое уведомление. Всё работает 👍' });
+      }
       toast('Уведомление отправлено');
       break;
     case 'test-tg':
@@ -1552,7 +2005,11 @@ $('importFile').addEventListener('change', e => {
   e.target.value = '';
 });
 
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+startSeasonalEffects();
 boot();
 </script>
 </body>
-</html>
+  </html>
