@@ -1871,4 +1871,210 @@ function savePin(){
   state.curatorPin = pin; save(); toast('PIN обновлён');
 }
 function exportJSON(){
-  const blob = new Blob([JSON
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tezis-backup-'+todayStr()+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function resetAll(){
+  if (!confirm('Стереть ВСЕ данные?')) return;
+  state = blank(); save(); toast('Данные стёрты');
+}
+
+function openAvatarPicker(){
+  const me = state.students.find(s=>s.id===session.id);
+  if (!me) return;
+  const EMOJIS = ['🦊','🐼','🦁','🌸','⚡','🌙','🐨','🦉','🐧','🦄','🐯','🍀','⭐','🔥','🎯','🌊'];
+  const div = document.createElement('div');
+  div.className = 'celebrate';
+  div.innerHTML = `
+    <div class="celebrate-card" style="max-width:380px">
+      <div class="celebrate-title" style="font-size:22px;margin-bottom:16px">Выбери аватар</div>
+      <div class="avatar-picker">
+        ${EMOJIS.map(e=>`<button class="avatar-opt ${me.avatar===e?'active':''}" data-emoji="${e}">${e}</button>`).join('')}
+      </div>
+      <button class="btn btn-ghost" style="margin-top:16px;width:100%" data-cancel="1">Закрыть</button>
+    </div>`;
+  div.addEventListener('click', (e)=>{
+    const b = e.target.closest('.avatar-opt');
+    if (b){
+      me.avatar = b.dataset.emoji;
+      save(); div.remove(); render();
+      return;
+    }
+    if (e.target === div || e.target.closest('[data-cancel]')) div.remove();
+  });
+  document.body.appendChild(div);
+}
+
+/* ============================================================
+   10. ФОТО
+   ============================================================ */
+function renderPhotoPreview(){
+  const box = $('photoPrev');
+  if (!box) return;
+  box.innerHTML = ui.tempPhotos.map((p,i)=>`
+    <div class="photo-thumb">
+      <img src="${p}">
+      <button class="rm" data-act="rm-photo" data-idx="${i}">×</button>
+    </div>`).join('');
+}
+async function handleFileInput(e){
+  const files = Array.from(e.target.files||[]).slice(0, 3 - ui.tempPhotos.length);
+  if (!files.length) return;
+  const label = e.target.closest('.file-btn');
+  label?.classList.add('loading');
+  for (const f of files){
+    try { ui.tempPhotos.push(await compressImage(f)); } catch(err){ console.warn(err); }
+  }
+  label?.classList.remove('loading');
+  renderPhotoPreview();
+  e.target.value = '';
+}
+
+/* ============================================================
+   11. СОБЫТИЯ
+   ============================================================ */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id;
+  const kind = el.dataset.kind;
+
+  switch(act){
+    case 'role': ui.role = el.dataset.role; render(); break;
+    case 'login-curator': doLoginCurator(); break;
+    case 'login-student': doLoginStudent(); break;
+    case 'logout':
+      session = null; localStorage.removeItem(LS_SES);
+      ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
+             filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false, checkReaction:null };
+      updateTitle(); render(); break;
+    case 'tab': ui.tab = el.dataset.tab; ui.openCheck=null; render(); break;
+    case 'set-filter': ui.filter = el.dataset.filter; render(); break;
+    case 'add-student': addStudent(); break;
+    case 'del-student': delStudent(id); break;
+    case 'add-task': addTask(); break;
+    case 'del-task': delTask(id); break;
+    case 'open-task': ui.openTask = id; ui.tempPhotos = []; render(); break;
+    case 'open-check': ui.openCheck = id; ui.openFree = kind; ui.checkReaction = null; render(); break;
+    case 'back': ui.openTask = null; ui.openCheck = null; ui.tempPhotos = []; ui.checkReaction = null; render(); break;
+    case 'submit-work': submitWork(id); break;
+    case 'save-check': saveCheck(id, kind, el.dataset.next==='1'); break;
+    case 'save-pin': savePin(); break;
+    case 'export': exportJSON(); break;
+    case 'import': $('importFile').click(); break;
+    case 'reset': resetAll(); break;
+
+    case 'open-free': ui.newFree = true; ui.tempPhotos = []; render(); break;
+    case 'close-free': ui.newFree = false; ui.tempPhotos = []; render(); break;
+    case 'submit-free': submitFree(); break;
+    case 'open-myfree': ui.openTask = id; renderStudentMyFree(); break;
+    case 'open-progress': ui.showProgress = true; render(); break;
+    case 'close-progress': ui.showProgress = false; render(); break;
+    case 'open-avatar': openAvatarPicker(); break;
+
+    case 'open-checkin': ui.newCheckin = true; render(); break;
+    case 'close-checkin': ui.newCheckin = false; render(); break;
+    case 'submit-checkin': submitCheckin(); break;
+    case 'like-checkin': likeCheckin(id); render(); break;
+
+    case 'rm-photo': ui.tempPhotos.splice(+el.dataset.idx,1); renderPhotoPreview(); break;
+    case 'zoom': {
+      const src = el.dataset.imgSrc || el.getAttribute('src');
+      if (src) showLightbox(src);
+      break;
+    }
+    case 'set-score': {
+      const inp = $('cScore');
+      if (inp) inp.value = el.dataset.val;
+      document.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      break;
+    }
+    case 'set-reaction': {
+      const emoji = el.dataset.emoji;
+      if (ui.checkReaction === emoji){ ui.checkReaction = null; }
+      else { ui.checkReaction = emoji; }
+      document.querySelectorAll('.reaction-btn').forEach(b=>b.classList.remove('active'));
+      if (ui.checkReaction) el.classList.add('active');
+      break;
+    }
+    case 'use-tpl': {
+      const ta = $('cFb');
+      if (ta){
+        ta.value = ta.value ? (ta.value + '\n' + el.dataset.tpl) : el.dataset.tpl;
+        ta.focus();
+      }
+      break;
+    }
+    case 'ask-notif': askNotifications(); break;
+    case 'test-notif':
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+        new Notification('ТЕЗИС', { body: 'Тестовое уведомление. Всё работает 👍' });
+      }
+      toast('Уведомление отправлено');
+      break;
+    case 'test-tg':
+      sendTelegram('✅ <b>ТЕЗИС</b>\nTelegram-уведомления настроены. Всё работает!');
+      toast('Проверь Telegram 📱');
+      break;
+    case 'dismiss-notif-banner':
+      notifBannerDismissed = true;
+      localStorage.setItem('tezis.notifBanner', 'dismissed');
+      render();
+      break;
+  }
+});
+
+function renderStudentMyFree(){
+  const me = state.students.find(s=>s.id===session.id);
+  if (!me) return;
+  $('app').innerHTML = viewStudentMyFree(me);
+}
+
+function showLightbox(src){
+  const div = document.createElement('div');
+  div.className = 'lightbox';
+  div.innerHTML = `<img src="${src}">`;
+  div.addEventListener('click', ()=>div.remove());
+  document.body.appendChild(div);
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'sFile' || e.target.id === 'fFile') handleFileInput(e);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key!=='Enter') return;
+  if (!session && ui.role==='curator' && $('pin')) doLoginCurator();
+  if (!session && ui.role==='student' && $('spin')) doLoginStudent();
+});
+
+$('importFile').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const parsed = JSON.parse(r.result);
+      state = Object.assign(blank(), parsed);
+      state.students = state.students||[]; state.tasks = state.tasks||[];
+      state.subs = state.subs||[]; state.freesubs = state.freesubs||[];
+      state.checkins = state.checkins||[];
+      save(); toast('Данные загружены');
+    } catch(err){ toast('Не получилось прочитать файл'); }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+});
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+applySeason();
+boot();
+</script>
+</body>
+</html>
