@@ -159,7 +159,6 @@
   .streak-status .today{font-size:13px; color:var(--ok); font-weight:600}
   .streak-status .missed{font-size:13px; color:var(--accent); font-weight:600}
 
-  /* ---------- КНОПКИ БАЛЛОВ ---------- */
   .score-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .score-btn{min-width:46px;height:46px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
     background:var(--paper);font-family:Georgia,serif;font-size:20px;color:var(--ink);
@@ -176,7 +175,6 @@
   .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
   .action-row .btn{flex:1;min-width:150px}
 
-  /* ---------- БАННЕР УВЕДОМЛЕНИЙ ---------- */
   .notif-banner{
     background:linear-gradient(135deg, #EAF3FF 0%, #DDEAFF 100%);
     border:1px solid #B8D4F5; border-radius:12px; padding:14px 18px; margin-bottom:18px;
@@ -231,6 +229,23 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 /* ============================================================
+   TELEGRAM — уведомления куратору
+   ============================================================ */
+const TELEGRAM_TOKEN = '5104779882:AAHRUoojxHPGUlfkmb_57LY8jEZbFBFNAuQ';
+const TELEGRAM_CHAT  = '1178920700';
+
+async function sendTelegram(text){
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text, parse_mode: 'HTML' })
+    });
+  } catch(e){ console.warn('Telegram не отправлен', e); }
+}
+
+/* ============================================================
    1. ОБЛАКО
    ============================================================ */
 const firebaseConfig = {
@@ -255,7 +270,6 @@ if (firebaseConfig.databaseURL && typeof firebase !== 'undefined') {
    ============================================================ */
 const LS_DATA = 'tezis.data.v1';
 const LS_SES  = 'tezis.session.v1';
-const LS_NOTIF = 'tezis.notif.v1';
 const blank = () => ({ curatorPin:'1234', students:[], tasks:[], subs:[], freesubs:[], checkins:[] });
 
 let state = blank();
@@ -263,11 +277,20 @@ let session = null;
 let ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
            filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
 
-/* Служебные переменные для уведомлений */
 let lastPendingCount = -1;
-let lastReminderAt = 0;
-const REMINDER_INTERVAL = 2 * 60 * 60 * 1000; // 2 часа
 let notifBannerDismissed = localStorage.getItem('tezis.notifBanner') === 'dismissed';
+
+/* Telegram-напоминание раз в 2 часа */
+const TG_REMINDER_INTERVAL = 2 * 60 * 60 * 1000;
+let tgLastReminder = 0;
+setInterval(() => {
+  if (!session || session.role !== 'curator') return;
+  const cur = countPending();
+  if (cur > 0 && Date.now() - tgLastReminder > TG_REMINDER_INTERVAL){
+    tgLastReminder = Date.now();
+    sendTelegram(`🔔 <b>Напоминание</b>\nУ тебя ${cur} ${cur===1?'непроверенная работа':'непроверенных работ'}. Загляни в кабинет.`);
+  }
+}, 10 * 60 * 1000);
 
 /* ============================================================
    3. УТИЛИТЫ
@@ -357,29 +380,16 @@ function pluralDays(n){
   return 'дней';
 }
 
-/* ============================================================
-   УВЕДОМЛЕНИЯ
-   ============================================================ */
 function canNotify(){
   return typeof Notification !== 'undefined' && Notification.permission === 'granted';
 }
 
 function askNotifications(){
-  if (typeof Notification === 'undefined') {
-    toast('Браузер не поддерживает уведомления');
-    return;
-  }
-  if (Notification.permission === 'granted') {
-    toast('Уведомления уже включены 👍');
-    return;
-  }
+  if (typeof Notification === 'undefined') { toast('Браузер не поддерживает уведомления'); return; }
+  if (Notification.permission === 'granted') { toast('Уведомления уже включены 👍'); return; }
   Notification.requestPermission().then(p => {
-    if (p === 'granted') {
-      toast('Уведомления включены 🔔');
-      showNotif('ТЕЗИС', 'Уведомления работают! Теперь ты не пропустишь работы учеников.');
-    } else {
-      toast('Уведомления не разрешены');
-    }
+    if (p === 'granted') { toast('Уведомления включены 🔔'); }
+    else { toast('Уведомления не разрешены'); }
     render();
   });
 }
@@ -387,11 +397,7 @@ function askNotifications(){
 function showNotif(title, body, tag){
   if (!canNotify()) return;
   try {
-    const n = new Notification(title, {
-      body,
-      tag: tag || 'tezis',
-      icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="20" fill="#14110F"/><text x="48" y="66" font-family="Georgia,serif" font-size="52" font-weight="700" fill="#F4F0E8" text-anchor="middle">Т</text></svg>')
-    });
+    const n = new Notification(title, { body, tag: tag || 'tezis' });
     n.onclick = () => { window.focus(); n.close(); };
   } catch(e){ console.warn('Не удалось показать уведомление', e); }
 }
@@ -400,32 +406,6 @@ function countPending(){
   return state.subs.filter(s=>s.score==null).length
        + state.freesubs.filter(s=>s.score==null).length;
 }
-
-function checkForNewSubmissions(){
-  if (!session || session.role !== 'curator') return;
-  const cur = countPending();
-  if (lastPendingCount >= 0 && cur > lastPendingCount){
-    const diff = cur - lastPendingCount;
-    showNotif(
-      diff === 1 ? 'Новая работа 🎉' : 'Новые работы 🎉',
-      diff === 1 ? 'Ученик прислал работу на проверку' : `Пришло работ: ${diff}`,
-      'new-work'
-    );
-  }
-  lastPendingCount = cur;
-}
-
-/* Напоминание раз в 2 часа */
-setInterval(() => {
-  if (!session || session.role !== 'curator') return;
-  const cur = countPending();
-  if (cur > 0 && Date.now() - lastReminderAt > REMINDER_INTERVAL){
-    lastReminderAt = Date.now();
-    showNotif('ТЕЗИС — пора проверить',
-      cur === 1 ? 'У тебя 1 непроверенная работа' : `У тебя ${cur} непроверенных работ`,
-      'reminder');
-  }
-}, 5 * 60 * 1000); // проверка каждые 5 минут
 
 /* ============================================================
    4. ХРАНЕНИЕ
@@ -443,7 +423,6 @@ function boot(){
       const v = snap.val()||{};
       state = { curatorPin:v.curatorPin||'1234', students:v.students||[], tasks:v.tasks||[],
                 subs:v.subs||[], freesubs:v.freesubs||[], checkins:v.checkins||[] };
-      checkForNewSubmissions();
       updateTitle();
       render();
     }, err => { console.error(err); toast('Нет доступа к базе'); });
@@ -512,10 +491,7 @@ function loginStudentHTML(){
    ============================================================ */
 function viewCurator(){
   const pending = countPending();
-  const urgent = state.subs.filter(s=>s.score==null && Date.now()-new Date(s.at).getTime() > 2*24*3600*1000).length
-               + state.freesubs.filter(s=>s.score==null && Date.now()-new Date(s.at).getTime() > 2*24*3600*1000).length;
   const todayCheckins = (state.checkins||[]).filter(c=>dayKey(c.at)===dayKey()).length;
-
   const notifOn = canNotify();
   const showBanner = !notifOn && !notifBannerDismissed && typeof Notification !== 'undefined';
 
@@ -531,7 +507,7 @@ function viewCurator(){
     <div class="notif-banner">
       <div class="notif-banner-icon">🔔</div>
       <div class="notif-banner-text">
-        <b>Включи уведомления</b>, чтобы не забывать проверять работы. Они придут прямо в браузер.
+        <b>Уведомления в Telegram</b> работают. Дополнительно можно включить уведомления браузера.
       </div>
       <button class="btn" data-act="ask-notif">Включить</button>
       <button class="close-x" data-act="dismiss-notif-banner" title="Скрыть">✕</button>
@@ -656,24 +632,19 @@ function tabCheck(){
   let items = [];
   state.subs.forEach(s => items.push({ kind:'task', ...s }));
   state.freesubs.forEach(s => items.push({ kind:'free', ...s }));
-
-  // Сначала срочные, потом по дате (свежие вперёд)
   items.sort((a,b)=>{
     const ua = isUrgent(a) ? 1 : 0;
     const ub = isUrgent(b) ? 1 : 0;
     if (ua !== ub) return ub - ua;
     return (b.at||'').localeCompare(a.at||'');
   });
-
   if (ui.filter==='pending') items = items.filter(s=>s.score==null);
   if (ui.filter==='done')    items = items.filter(s=>s.score!=null);
 
-  const pendingCount = state.subs.filter(s=>s.score==null).length
-                     + state.freesubs.filter(s=>s.score==null).length;
+  const pendingCount = countPending();
   const urgentCount = [...state.subs, ...state.freesubs].filter(isUrgent).length;
 
   const pill = (k,l) => `<button class="pill ${ui.filter===k?'active':''}" data-act="set-filter" data-filter="${k}">${l}</button>`;
-
   const urgentBanner = (ui.filter !== 'done' && urgentCount > 0) ? `
     <div class="notif-banner" style="background:linear-gradient(135deg,#FFF1EE 0%,#FCE0D9 100%);border-color:#F0B8AA">
       <div class="notif-banner-icon">🚨</div>
@@ -750,18 +721,14 @@ function viewCheckDetail(){
     ${images.map((img,i)=>`<img src="${img}" data-act="zoom" data-img="${i}" data-target="${s.id}" data-kind="${kind}">`).join('')}
   </div>` : '';
 
-  // Кнопки баллов
   const scoreBtns = [];
   for (let i = 0; i <= max; i++){
     scoreBtns.push(`<button class="score-btn ${s.score===i?'active':''} ${i===0?'zero':''}"
       data-act="set-score" data-val="${i}">${i}</button>`);
   }
-
-  // Шаблоны комментариев
   const tplHTML = COMMENT_TEMPLATES.map(t =>
     `<button class="tpl" data-act="use-tpl" data-tpl="${esc(t)}">${esc(t)}</button>`).join('');
 
-  // Есть ли следующая работа
   const allPending = [
     ...state.subs.filter(x=>x.score==null).map(x=>({id:x.id, kind:'task', at:x.at})),
     ...state.freesubs.filter(x=>x.score==null).map(x=>({id:x.id, kind:'free', at:x.at}))
@@ -808,7 +775,6 @@ function viewCheckDetail(){
 function tabActivity(){
   const items = (state.checkins||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
   const todayItems = items.filter(c=>dayKey(c.at)===dayKey());
-
   return `
   <div class="card" style="margin-bottom:18px">
     <h2 class="h2">🔥 Огоньки учеников</h2>
@@ -824,12 +790,10 @@ function tabActivity(){
       </div>`;
     }).join('') : '<div class="meta">Пока нет учеников.</div>'}
   </div>
-
   <div class="pills" style="margin-top:6px">
     <span class="pill active" style="cursor:default">Всего отметок: ${items.length}</span>
     <span class="pill active" style="cursor:default">Сегодня: ${todayItems.length}</span>
   </div>
-
   <h2 class="h2" style="margin-top:20px">Последние отметки</h2>
   ${items.length ? items.slice(0, 100).map(checkinCardCurator).join('')
     : `<div class="empty">Пока никто не отмечался.</div>`}`;
@@ -851,18 +815,22 @@ function checkinCardCurator(c){
 function tabSettings(){
   const notifOn = canNotify();
   return `<div class="card" style="margin-bottom:18px">
-    <h2 class="h2">🔔 Уведомления</h2>
+    <h2 class="h2">📱 Уведомления в Telegram</h2>
     <p class="meta" style="margin-bottom:14px">
-      ${notifOn
-        ? 'Уведомления включены. Когда ученик присылает работу — тебе придёт пуш в браузер. Напоминание раз в 2 часа, если что-то ждёт проверки.'
-        : 'Уведомления выключены. Включи их, чтобы не пропускать работы.'}
+      Уведомления настроены и работают. При каждой сдаче работы тебе придёт сообщение в бот
+      <b>@Lucciola25_bot</b>. А раз в 2 часа — напоминание, если что-то ждёт проверки.
+    </p>
+    <button class="btn btn-primary" data-act="test-tg">Проверить Telegram</button>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <h2 class="h2">🔔 Уведомления браузера</h2>
+    <p class="meta" style="margin-bottom:14px">
+      ${notifOn ? 'Включены. Приходят, пока вкладка открыта.' : 'Дополнительный канал — если хочешь видеть пуши прямо в браузере.'}
     </p>
     ${notifOn
       ? `<button class="btn btn-ghost" data-act="test-notif">Проверить уведомление</button>`
-      : `<button class="btn btn-primary" data-act="ask-notif">Включить уведомления</button>`}
-    <div class="hint" style="margin-top:14px">
-      ⚠️ Уведомления работают, когда вкладка с сайтом открыта (можно свёрнута). Если полностью закроешь браузер — пуши не придут. На iPhone в Safari уведомления работают только после «Добавить на экран Домой».
-    </div>
+      : `<button class="btn btn-ghost" data-act="ask-notif">Включить</button>`}
   </div>
 
   <div class="card" style="margin-bottom:18px">
@@ -1114,11 +1082,9 @@ function viewCheckinForm(me){
     <button class="btn btn-ghost btn-sm" data-act="close-checkin">← Назад</button>
     <div class="card" style="margin-top:16px">
       <h1 class="display h1" style="margin-bottom:6px">🔥 Отметиться</h1>
-      <p class="meta" style="margin-bottom:20px">Расскажи коротко, что выучил или повторил сегодня. Это не сдача работы — просто отметка.</p>
-
+      <p class="meta" style="margin-bottom:20px">Расскажи коротко, что выучил или повторил сегодня.</p>
       <div class="field"><label class="label">Что сделал сегодня?</label>
-        <textarea class="textarea" id="chText" placeholder="Например: Повторил тему «Социальная стратификация», прочитал конспект по праву" style="min-height:100px"></textarea></div>
-
+        <textarea class="textarea" id="chText" placeholder="Например: Повторил тему «Социальная стратификация»" style="min-height:100px"></textarea></div>
       <button class="btn btn-primary" style="width:100%" data-act="submit-checkin">Отметиться 🔥</button>
     </div>
   </div></div>`;
@@ -1164,17 +1130,6 @@ function viewStudentProgress(me){
   const checked = all.filter(s=>s.score!=null);
 
   const avg = checked.length ? checked.reduce((a,b)=>a+Number(b.score),0)/checked.length : 0;
-
-  const weekAgo = Date.now() - 7*24*3600*1000;
-  const thisWeek = checked.filter(s=>new Date(s.checkedAt||s.at).getTime() >= weekAgo);
-  const prevWeek = checked.filter(s=>{
-    const t = new Date(s.checkedAt||s.at).getTime();
-    return t >= weekAgo-7*24*3600*1000 && t < weekAgo;
-  });
-  const avgW = thisWeek.length ? thisWeek.reduce((a,b)=>a+Number(b.score),0)/thisWeek.length : 0;
-  const avgP = prevWeek.length ? prevWeek.reduce((a,b)=>a+Number(b.score),0)/prevWeek.length : 0;
-  const diff = avgP ? (avgW - avgP) : 0;
-
   const streak = calcStreak(me.id);
 
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1194,7 +1149,7 @@ function viewStudentProgress(me){
   }).join('');
 
   const W = 320, H = 160, P = 28;
-  let chart = `<div class="empty">Пока нет проверенных работ — график появится, когда куратор поставит первую оценку.</div>`;
+  let chart = `<div class="empty">Пока нет проверенных работ — график появится позже.</div>`;
   if (checked.length >= 2){
     const maxScore = Math.max(...checked.map(s=>Number(s.score)), 1);
     const pts = checked.map((s,i)=>{
@@ -1217,8 +1172,7 @@ function viewStudentProgress(me){
     </svg>`;
   } else if (checked.length === 1){
     chart = `<div class="answer" style="text-align:center">
-      Первая оценка: <b>${checked[0].score}/${checked[0].max}</b><br>
-      <span class="muted" style="font-size:13px">Сдай ещё работу — появится график 📈</span>
+      Первая оценка: <b>${checked[0].score}/${checked[0].max}</b>
     </div>`;
   }
 
@@ -1236,26 +1190,13 @@ function viewStudentProgress(me){
 
   return `${studentTopbar(me)}<div class="container"><div class="page">
     <button class="btn btn-ghost btn-sm" data-act="close-progress">← Назад</button>
-
     <h1 class="display h1" style="margin:16px 0 6px">Прогресс</h1>
     <p class="meta" style="margin-bottom:20px">${esc(me.name)} · всего сдано ${all.length} · проверено ${checked.length}</p>
 
     <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-      <div class="stat">
-        <div class="n">${avg.toFixed(1)}</div>
-        <div class="l">Средний балл
-          ${diff!==0 ? `<span style="color:${diff>0?'var(--ok)':'var(--accent)'}">
-            ${diff>0?'↑':'↓'} ${Math.abs(diff).toFixed(1)}</span>` : ''}
-        </div>
-      </div>
-      <div class="stat">
-        <div class="n">${streak}🔥</div>
-        <div class="l">${pluralDays(streak)} подряд</div>
-      </div>
-      <div class="stat">
-        <div class="n">${checked.length}/${all.length}</div>
-        <div class="l">Проверено / сдано</div>
-      </div>
+      <div class="stat"><div class="n">${avg.toFixed(1)}</div><div class="l">Средний балл</div></div>
+      <div class="stat"><div class="n">${streak}🔥</div><div class="l">${pluralDays(streak)} подряд</div></div>
+      <div class="stat"><div class="n">${checked.length}/${all.length}</div><div class="l">Проверено / сдано</div></div>
     </div>
 
     <div class="card" style="margin-bottom:16px">
@@ -1266,7 +1207,7 @@ function viewStudentProgress(me){
     <div class="card" style="margin-bottom:16px">
       <h2 class="h2">Активность за 28 дней</h2>
       <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px">${activityHTML}</div>
-      <p class="meta" style="margin-top:10px;font-size:12px">Чем темнее квадрат — тем больше активности в этот день (сдачи и отметки).</p>
+      <p class="meta" style="margin-top:10px;font-size:12px">Чем темнее квадрат — тем больше активности.</p>
     </div>
 
     ${typeRows ? `<div class="card">
@@ -1285,7 +1226,6 @@ function doLoginCurator(){
   session = { role:'curator' };
   localStorage.setItem(LS_SES, JSON.stringify(session));
   ui.tab = 'students';
-  lastPendingCount = countPending(); // фиксируем стартовое значение
   render();
 }
 function doLoginStudent(){
@@ -1337,12 +1277,8 @@ function addSubmissionCheckin(studentId, topic, kind, taskType){
   const prefix = kind==='free' ? 'Сдал(а) свободную работу' : 'Сдал(а) задание';
   const text = `${prefix}: ${topic}${taskType ? ' ('+taskType+')' : ''}`;
   state.checkins.push({
-    id: uid(),
-    studentId,
-    text,
-    kind: 'submission',
-    at: new Date().toISOString(),
-    likedByCurator: false
+    id: uid(), studentId, text, kind: 'submission',
+    at: new Date().toISOString(), likedByCurator: false
   });
 }
 
@@ -1360,6 +1296,12 @@ function submitWork(taskId){
   if (ex) Object.assign(ex, obj); else state.subs.push(obj);
 
   if (!ex && a) addSubmissionCheckin(sid, a.topic||'Задание', 'task', a.type);
+
+  // Telegram-уведомление
+  const me = state.students.find(s=>s.id===sid);
+  const taskLabel = a?.topic || 'задание';
+  const taskType = a?.type ? ` (${a.type})` : '';
+  sendTelegram(`📝 <b>Новая работа</b>\n${me?.name || 'Ученик'} — ${taskLabel}${taskType}`);
 
   ui.openTask = null; ui.tempPhotos = [];
   save(); toast('Работа отправлена 🔥');
@@ -1379,6 +1321,11 @@ function submitFree(){
     at: new Date().toISOString(), score: null, feedback: ''
   });
   addSubmissionCheckin(session.id, topic, 'free', type);
+
+  // Telegram-уведомление
+  const me = state.students.find(s=>s.id===session.id);
+  sendTelegram(`📝 <b>Свободная работа</b>\n${me?.name || 'Ученик'} — ${topic} (${type})`);
+
   ui.newFree = false; ui.tempPhotos = [];
   save(); toast('Работа отправлена 🔥');
 }
@@ -1388,12 +1335,8 @@ function submitCheckin(){
   if (!text) return toast('Напиши пару слов о том, что выучил');
   state.checkins = state.checkins || [];
   state.checkins.push({
-    id: uid(),
-    studentId: session.id,
-    text,
-    kind: 'study',
-    at: new Date().toISOString(),
-    likedByCurator: false
+    id: uid(), studentId: session.id, text, kind: 'study',
+    at: new Date().toISOString(), likedByCurator: false
   });
   ui.newCheckin = false;
   save(); toast('Отметился! 🔥');
@@ -1420,7 +1363,6 @@ function saveCheck(id, kind, next){
   s.checkedAt = new Date().toISOString();
 
   if (next){
-    // Ищем следующую непроверенную
     const allPending = [
       ...state.subs.filter(x=>x.score==null && x.id !== id).map(x=>({id:x.id, kind:'task', at:x.at})),
       ...state.freesubs.filter(x=>x.score==null && x.id !== id).map(x=>({id:x.id, kind:'free', at:x.at}))
@@ -1438,7 +1380,6 @@ function saveCheck(id, kind, next){
       return;
     }
   }
-
   ui.openCheck = null;
   save(); toast('Проверка сохранена');
 }
@@ -1502,7 +1443,6 @@ document.addEventListener('click', e => {
       session = null; localStorage.removeItem(LS_SES);
       ui = { role:'curator', tab:'students', openTask:null, openCheck:null, openFree:null,
              filter:'pending', newFree:false, tempPhotos:[], showProgress:false, newCheckin:false };
-      lastPendingCount = -1;
       updateTitle();
       render(); break;
     case 'tab': ui.tab = el.dataset.tab; ui.openCheck=null; render(); break;
@@ -1539,8 +1479,6 @@ document.addEventListener('click', e => {
       if (src) showLightbox(src);
       break;
     }
-
-    /* НОВОЕ — кнопки баллов, шаблоны, уведомления */
     case 'set-score': {
       const inp = $('cScore');
       if (inp) inp.value = el.dataset.val;
@@ -1558,8 +1496,12 @@ document.addEventListener('click', e => {
     }
     case 'ask-notif': askNotifications(); break;
     case 'test-notif':
-      showNotif('ТЕЗИС', 'Это тестовое уведомление. Всё работает 👍', 'test');
+      showNotif('ТЕЗИС', 'Тестовое уведомление. Всё работает 👍', 'test');
       toast('Уведомление отправлено');
+      break;
+    case 'test-tg':
+      sendTelegram('✅ <b>ТЕЗИС</b>\nTelegram-уведомления настроены. Всё работает!');
+      toast('Проверь Telegram 📱');
       break;
     case 'dismiss-notif-banner':
       notifBannerDismissed = true;
@@ -1613,4 +1555,4 @@ $('importFile').addEventListener('change', e => {
 boot();
 </script>
 </body>
-  </html>
+</html>
